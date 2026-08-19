@@ -1,0 +1,6 @@
+{
+  "extends": "../../tsconfig.base.json",
+  /* No `rootDir`: the base config maps `@agent-chat/*` to sibling sources, which would then
+   * sit outside it (TS6059). This config only type-checks — tsup owns the emit. */
+  "include": ["src", "../../types"]
+}

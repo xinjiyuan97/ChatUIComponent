@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm prettier --check "**/*.{ts,tsx,css,md,json}"
+      - run: pnpm test
+
+      # Everything below consumes `dist`, so the library build has to come first.
+      - run: pnpm build
+
+      # The `"use client"` banner is easy to lose (a stray `treeshake: true` in tsup drops it
+      # silently) and nothing else in the pipeline would notice, so assert it here.
+      - name: Assert "use client" survived the build
+        run: |
+          missing=0
+          for file in packages/*/dist/*.js packages/*/dist/*.cjs; do
+            head -c 20 "$file" | grep -q 'use client' || { echo "::error::missing \"use client\": $file"; missing=1; }
+          done
+          exit $missing
+
+      - run: pnpm build:storybook
+
+      # Proves the published bundles work under the App Router: SSR, the client boundary,
+      # and Tailwind's `@source` scan through pnpm's symlinks into `dist`.
+      - run: pnpm --filter @agent-chat/example-next-app build

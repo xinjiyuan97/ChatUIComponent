@@ -1,0 +1,166 @@
+import { Meta } from '@storybook/blocks'
+
+<Meta title="Overview" />
+
+# Agent Chat
+
+给 agent 项目复用的聊天 UI。流式拼接、思考过程、工具调用、Markdown 高亮、会话列表、以及一个让 agent
+直接吐 UI 的 A2UI 口子 —— 这些每次重写都很烦、又很容易做丑的部分，这里已经做完了。
+
+上方工具栏可以切 **明/暗主题**、**密度**、**语言**，所有 story 都跟着变。
+
+## 三个包
+
+| 包                 | 作用                                                                       |
+| ------------------ | -------------------------------------------------------------------------- |
+| `@agent-chat/core` | 零 UI。消息模型、事件流、store、transport、hooks。React 之外不依赖任何东西 |
+| `@agent-chat/a2ui` | JSON → UI 的协议、渲染器和安全边界                                         |
+| `@agent-chat/ui`   | 全部视觉组件、design token、以及 `@agent-chat/ui/a2ui-registry` 默认组件集 |
+
+依赖是单向的：`a2ui → core`，`ui → core + a2ui`。只想要状态管理、自己写皮的话，装 `core` 就够。
+
+## 从哪儿开始看
+
+- **[Chat / End to End](?path=/story/chat-end-to-end--playground)** —— 一条消息从提问到 A2UI 卡片回传的完整流程。
+  这条跑顺就说明所有子系统是通的，先看这个。
+- **[Chat / Parts](?path=/story/chat-parts--tool-call-states)** —— 工具调用的五种状态、思考块、来源、错误。
+- **[Chat / Composer](?path=/story/chat-composer--multimodal)** —— 附件（选择 / 拖拽 / 粘贴）和语音输入。
+- **[Chat / Composer → Model picker](?path=/story/chat-composer--with-model-select)** —— 工具栏里的模型选择。
+- **[Chat / Markdown](?path=/story/chat-markdown--streaming)** —— 逐字符重放，看未闭合语法在流式中途是怎么被补齐的。
+- **[Chat / Markdown → Mermaid diagrams](?path=/story/chat-markdown--diagrams)** 和
+  **[→ Runnable code](?path=/story/chat-markdown--runnable)** —— 图表渲染，以及带结果面板的运行按钮。
+- **[Chat / Markdown → Blockquotes & callouts](?path=/story/chat-markdown--quotes)** 和
+  **[Chat / Message → Inline citations](?path=/story/chat-message--citations)** —— 提示框，以及点得动的角标。
+- **[Chat / Composer → Quote reply](?path=/story/chat-composer--with-quote)** —— 选中一段回复带进输入框。
+- **[Conversations / Sidebar](?path=/story/conversations-sidebar--five-hundred)** —— 500 条会话，虚拟滚动。
+- **[Conversations / Sidebar → Agent groups](?path=/story/conversations-sidebar--agent-groups)** ——
+  一个 agent 下面挂多个会话，分区可折叠，搜索时跨 agent 展平。
+- **[A2UI / Renderer](?path=/story/a2ui-renderer--hostile)** —— 恶意 spec 会被怎么处理。
+- **[Foundations / Tokens](?path=/story/foundations-tokens--colors)** —— 全部 design token。
+
+## 最小用法
+
+```tsx
+import { createSSETransport, useChat } from '@agent-chat/core'
+import {
+  ChatContainer,
+  ChatMessageList,
+  ChatThemeProvider,
+  ChatViewport,
+  Message,
+  PromptInput,
+} from '@agent-chat/ui'
+
+const transport = createSSETransport({ url: '/api/chat' })
+
+export function Chat() {
+  const chat = useChat({ transport })
+
+  return (
+    <ChatThemeProvider>
+      <ChatContainer>
+        <ChatViewport>
+          <ChatMessageList busy={chat.isLoading}>
+            {chat.messages.map((m) => (
+              <Message key={m.id} message={m} onRegenerate={() => chat.regenerate()} />
+            ))}
+          </ChatMessageList>
+        </ChatViewport>
+        <PromptInput
+          onSubmit={(text) => chat.send(text)}
+          onStop={chat.stop}
+          streaming={chat.isLoading}
+        />
+      </ChatContainer>
+    </ChatThemeProvider>
+  )
+}
+```
+
+## 消息是 parts 数组，不是一个字符串
+
+一条 assistant 回复天然是「思考 → 工具调用 → 文本 → 卡片」的混合序列，所以 `message.parts` 是有序数组：
+
+```ts
+type MessagePart =
+  | { type: 'text'; text: string }
+  | { type: 'reasoning'; text: string; durationMs?: number }
+  | {
+      type: 'tool'
+      toolCallId: string
+      name: string
+      state: ToolState
+      input?: unknown
+      output?: unknown
+    }
+  | { type: 'a2ui'; surfaceId: string; spec: A2UINode; resolved?: boolean }
+  | { type: 'file' | 'source' | 'error' | 'custom' /* … */ }
+```
+
+`MessageContent` 按 `part.type` 分派。想给某个工具单独做展示，在 `ChatThemeProvider` 上传
+`toolRenderers={{ read_file: MyRenderer }}` 即可 —— 这是 function call 定制的主要口子，不用 fork 组件。
+
+## 多模态输入
+
+`useAttachments` 和 `useVoiceInput` 都是 headless hook，`PromptInput` 只是把它们画出来：
+
+```tsx
+const attachments = useAttachments({ accept: 'image/*,.pdf', maxSize: 5 * 1024 * 1024 })
+const voice = useVoiceInput({ lang: 'zh-CN' })
+
+<PromptInput
+  attachments={attachments}
+  voice={voice}
+  showImageButton
+  onSubmit={(text, { parts }) => chat.send(text, { parts })}
+/>
+```
+
+不传 `onUpload` 时文件被读成 data URL 直接进 parts，不需要后端；传了就先传到你的存储，parts 里放回来的 URL。
+
+再传 `models` 就多一个模型选择器；不传就没有。选中的 id 原样回给你，组件不做 id → endpoint 的映射。
+
+## 代码块：复制、运行、Mermaid
+
+复制和自动换行是内置的。运行按钮默认**不存在** —— 给 provider 传 `onRunCode` 才出现：
+
+```tsx
+<ChatThemeProvider onRunCode={(code, language) => runInYourSandbox(code, language)}>
+```
+
+` ```mermaid ` 围栏渲染成图表，`mermaid` 是可选 peer 依赖（`pnpm add mermaid`），没装就退化成代码块。
+
+## 三种「引用」
+
+名字一样，三件事：
+
+- **引用块 / 提示框** —— `>` 是旁白，`> [!WARNING]` 是提示框（GitHub 语法，模型就会写这个）。不认识的标记退回普通引用，文字不丢。
+- **行内角标** —— 消息里有 `source` part 时，正文里的 `[1]` / `[1,2]` 变成上标，点一下展开来源列表并高亮对应行。编号只在这条消息内有效；行内代码里的 `tokens[1]` 和越界编号不动。
+- **引用回复** —— 选中一段回复，带到输入框上方：
+
+```tsx
+<Message message={m} quoteAuthor="助手" onQuote={setQuote} />
+<PromptInput
+  quote={quote}
+  onQuoteRemove={() => setQuote(null)}
+  onSubmit={(text, options) => chat.send(text, { body: { quote: options.quote } })}
+/>
+```
+
+引用不拼进输入框的文字里，而是原样放在 `options.quote` 上 —— 变成 `>` 块、独立消息还是请求字段，是宿主的决定。
+
+## 四个提醒
+
+**本库不执行任何代码。** 没有 `eval`，没有 Worker。运行按钮只是一个口子：`onRunCode` 不传就没有按钮，
+传了也是**你的**函数在跑。聊天记录里的代码是模型输出，在哪里执行是宿主的决定，渲染器不该替你做。
+
+**API key 不要进浏览器。** `createOpenAITransport` / `createAnthropicTransport` 面向的是你自己的代理端点，
+由服务端持有凭证并转发上游 SSE。进了前端包的 key 等于已经公开了。
+
+**A2UI spec 是模型输出，按不可信输入处理。** 渲染器不 eval、限制节点数和深度、过滤
+`dangerouslySetInnerHTML` / `on*` 字符串 / `javascript:` 链接，未注册的 type 走 fallback 而不是抛错。
+详见 `A2UI / Renderer` 里的 **Hostile** story。
+
+**浏览器原生语音识别不是本地识别。** `useVoiceInput` 默认走 `SpeechRecognition`，而 Chrome 的实现会把音频
+送到 Google 的服务器。用户可能对着麦克风念客户名或内部代号的话，传一个 `transcribe(blob)` ——
+改成本地录音 + 你自己的转写服务。

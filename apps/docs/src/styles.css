@@ -1,0 +1,18 @@
+/*
+ * Storybook's stylesheet. This is the "consumer already uses Tailwind" path from the
+ * README: import the tokens, then point `@source` at the package so utilities are
+ * generated once by this build instead of shipping a second copy of them.
+ */
+@import 'tailwindcss';
+@import '../../../packages/ui/src/styles/tokens.css';
+
+@source '../../../packages/ui/src';
+@source '../src';
+
+/* Storybook's own canvas, so the preview background follows the theme toolbar. */
+html,
+body,
+#storybook-root {
+  background-color: var(--color-cc-canvas);
+  color: var(--color-cc-fg);
+}

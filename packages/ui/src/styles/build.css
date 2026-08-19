@@ -1,0 +1,12 @@
+/*
+ * Entry point for the pre-compiled stylesheet shipped as `@agent-chat/ui/style.css`.
+ *
+ * Consumers who already use Tailwind should import `@agent-chat/ui/tokens.css` instead
+ * and add a `@source` pointing at the package, so utilities are generated once by their
+ * own build rather than duplicated.
+ */
+@import 'tailwindcss';
+@import './tokens.css';
+
+/* Scan this package's source so every utility the components use ends up in the bundle. */
+@source '../';

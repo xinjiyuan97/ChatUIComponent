@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    /* Re-declared, because `paths` replaces rather than merges — and `baseUrl` must move
+     * with it, since the inherited one points at the repo root. */
+    "baseUrl": ".",
+    "paths": {
+      "@agent-chat/core": ["../../packages/core/src/index.ts"],
+      "@agent-chat/a2ui": ["../../packages/a2ui/src/index.ts"],
+      "@agent-chat/ui": ["../../packages/ui/src/index.ts"],
+      "@agent-chat/ui/a2ui-registry": ["../../packages/ui/src/a2ui-registry/index.ts"]
+    }
+  },
+  "include": ["src", ".storybook"]
+}

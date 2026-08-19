@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": false,
+
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+
+    "noEmit": true,
+
+    /* Type-check against sources rather than build output, so `typecheck` works in a clean
+     * checkout and an edit in core is reflected in ui without an intervening build.
+     * Bundling is unaffected: tsup resolves workspace packages through node_modules. */
+    "baseUrl": ".",
+    "paths": {
+      "@agent-chat/core": ["./packages/core/src/index.ts"],
+      "@agent-chat/a2ui": ["./packages/a2ui/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "dist", "storybook-static"]
+}

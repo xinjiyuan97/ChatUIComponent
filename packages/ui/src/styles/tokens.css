@@ -1,0 +1,336 @@
+/*
+ * Design tokens.
+ *
+ * Everything visual in this library resolves to one of these variables — no component
+ * hard-codes a colour, radius or duration. Theming is therefore a matter of overriding
+ * variables, never of patching component internals.
+ *
+ * The palette is a warm neutral grey with a single cool accent. Warm neutrals read as
+ * paper rather than as screen, which is what makes long assistant replies comfortable to
+ * read; the accent is cool so it separates cleanly from the text it sits beside.
+ *
+ * Colours are oklch: unlike hsl, equal lightness values look equally light across hues,
+ * so the dark theme can be derived by moving L and keeping C/H without hue-shifting.
+ */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* ---------------------------------------------------------------- surfaces */
+  /* Page background. Slightly warm so white cards lift off it without a border. */
+  --color-cc-canvas: oklch(0.985 0.004 85);
+  /* Cards, sidebars, input wells. */
+  --color-cc-surface: oklch(1 0 0);
+  /* User bubbles, hover states, inline code. */
+  --color-cc-subtle: oklch(0.963 0.005 85);
+  /* One step further down, for nested blocks inside an already-subtle container. */
+  --color-cc-sunken: oklch(0.945 0.006 85);
+
+  /* ---------------------------------------------------------------- text */
+  --color-cc-fg: oklch(0.24 0.008 75);
+  /* Timestamps, collapsed headers, secondary metadata. */
+  --color-cc-muted: oklch(0.535 0.011 75);
+  /* Placeholders and disabled text. Still passes 4.5:1 on canvas. */
+  --color-cc-faint: oklch(0.652 0.009 75);
+
+  /* ---------------------------------------------------------------- lines */
+  --color-cc-border: oklch(0.915 0.005 85);
+  /* Only for elements that must read as interactive, e.g. a focused input. */
+  --color-cc-border-strong: oklch(0.855 0.006 85);
+
+  /* ---------------------------------------------------------------- accent */
+  /* Used in exactly two places: the primary action, and the active conversation. */
+  --color-cc-accent: oklch(0.552 0.163 264);
+  --color-cc-accent-hover: oklch(0.5 0.163 264);
+  --color-cc-accent-fg: oklch(1 0 0);
+  --color-cc-accent-subtle: oklch(0.955 0.025 264);
+
+  /* ---------------------------------------------------------------- status */
+  --color-cc-success: oklch(0.6 0.13 155);
+  --color-cc-success-subtle: oklch(0.955 0.03 155);
+  --color-cc-warning: oklch(0.7 0.14 75);
+  --color-cc-warning-subtle: oklch(0.96 0.035 75);
+  --color-cc-danger: oklch(0.575 0.19 27);
+  --color-cc-danger-subtle: oklch(0.958 0.025 27);
+
+  /* ---------------------------------------------------------------- radii */
+  --radius-cc-xs: 6px;
+  --radius-cc-sm: 8px;
+  --radius-cc-md: 12px;
+  --radius-cc-lg: 16px;
+  /* User bubbles are rounder than cards — it reads as speech rather than as a panel. */
+  --radius-cc-bubble: 18px;
+  --radius-cc-full: 9999px;
+
+  /* ---------------------------------------------------------------- type */
+  --font-cc-sans:
+    ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Noto Sans SC', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji';
+  --font-cc-mono:
+    ui-monospace, 'SF Mono', SFMono-Regular, 'JetBrains Mono', Menlo, Consolas, 'Liberation Mono',
+    monospace;
+
+  /* 15px is the sweet spot for mixed CJK/Latin body text: 14 is cramped for Chinese
+   * glyphs, 16 makes long English paragraphs feel oversized in a chat column. */
+  --text-cc-body: 0.9375rem;
+  --text-cc-body--line-height: 1.65;
+  --text-cc-sm: 0.8125rem;
+  --text-cc-sm--line-height: 1.5;
+  --text-cc-xs: 0.75rem;
+  --text-cc-xs--line-height: 1.45;
+  --text-cc-code: 0.8375rem;
+  --text-cc-code--line-height: 1.6;
+
+  /* ---------------------------------------------------------------- depth */
+  /* Barely visible by design: hierarchy comes from whitespace, not from shadows. */
+  --shadow-cc-card: 0 1px 2px oklch(0.24 0.008 75 / 0.05);
+  --shadow-cc-raised: 0 1px 2px oklch(0.24 0.008 75 / 0.06), 0 4px 12px oklch(0.24 0.008 75 / 0.06);
+  --shadow-cc-overlay:
+    0 4px 8px oklch(0.24 0.008 75 / 0.06), 0 12px 32px oklch(0.24 0.008 75 / 0.12);
+
+  /* ---------------------------------------------------------------- motion */
+  /* A single easing curve everywhere. Mixed curves are the main reason interfaces feel
+   * assembled from parts rather than designed. */
+  --ease-cc: cubic-bezier(0.32, 0.72, 0, 1);
+  --animate-cc-shimmer: cc-shimmer 1.8s linear infinite;
+  --animate-cc-blink: cc-blink 1.1s steps(2, start) infinite;
+  --animate-cc-fade-in: cc-fade-in 0.2s var(--ease-cc) both;
+  --animate-cc-rise: cc-rise 0.24s var(--ease-cc) both;
+  --animate-cc-spin: cc-spin 0.7s linear infinite;
+  --animate-cc-dot: cc-dot 1.3s var(--ease-cc) infinite;
+  --animate-cc-ping: cc-ping 1.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+
+  /* ---------------------------------------------------------------- layout */
+  /* Caps the reading column. Beyond ~72ch the eye loses the line on the way back. */
+  --spacing-cc-measure: 46rem;
+  --spacing-cc-sidebar: 17rem;
+  --spacing-cc-sidebar-collapsed: 3.5rem;
+
+  /* Tailwind v4 resolves `max-w-*` from the `--container-*` namespace and `w-*`/`p-*`
+   * from `--spacing-*`, so the same three values are registered in both. */
+  --container-cc-measure: 46rem;
+  --container-cc-sidebar: 17rem;
+  --container-cc-sidebar-collapsed: 3.5rem;
+}
+
+.dark {
+  --color-cc-canvas: oklch(0.185 0.005 75);
+  --color-cc-surface: oklch(0.222 0.006 75);
+  --color-cc-subtle: oklch(0.262 0.007 78);
+  --color-cc-sunken: oklch(0.243 0.006 78);
+
+  --color-cc-fg: oklch(0.938 0.004 85);
+  --color-cc-muted: oklch(0.688 0.008 85);
+  --color-cc-faint: oklch(0.552 0.008 85);
+
+  --color-cc-border: oklch(0.302 0.007 80);
+  --color-cc-border-strong: oklch(0.382 0.008 80);
+
+  /* Lighter and slightly less saturated: a dark background makes chroma read hotter. */
+  --color-cc-accent: oklch(0.702 0.135 264);
+  --color-cc-accent-hover: oklch(0.752 0.135 264);
+  --color-cc-accent-fg: oklch(0.185 0.005 75);
+  --color-cc-accent-subtle: oklch(0.288 0.045 264);
+
+  --color-cc-success: oklch(0.712 0.125 155);
+  --color-cc-success-subtle: oklch(0.278 0.045 155);
+  --color-cc-warning: oklch(0.79 0.125 75);
+  --color-cc-warning-subtle: oklch(0.292 0.045 75);
+  --color-cc-danger: oklch(0.688 0.16 27);
+  --color-cc-danger-subtle: oklch(0.295 0.055 27);
+
+  /* Shadows are nearly worthless on dark surfaces; borders do the separating instead. */
+  --shadow-cc-card: 0 1px 2px oklch(0 0 0 / 0.3);
+  --shadow-cc-raised: 0 1px 2px oklch(0 0 0 / 0.4), 0 4px 12px oklch(0 0 0 / 0.3);
+  --shadow-cc-overlay: 0 4px 8px oklch(0 0 0 / 0.4), 0 12px 32px oklch(0 0 0 / 0.45);
+}
+
+/* Compact density: tightens vertical rhythm for dense tool-heavy transcripts without
+ * changing type size, which is what keeps it legible rather than merely smaller. */
+[data-cc-density='compact'] {
+  --cc-message-gap: 1.25rem;
+  --cc-block-gap: 0.5rem;
+  --cc-row-height: 2rem;
+}
+
+[data-cc-density='comfortable'] {
+  --cc-message-gap: 2rem;
+  --cc-block-gap: 0.75rem;
+  --cc-row-height: 2.25rem;
+}
+
+@keyframes cc-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes cc-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes cc-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes cc-rise {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes cc-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* The recording indicator. Deliberately slow and low-contrast — it has to be noticeable
+ * enough that nobody records by accident, without pulsing at the user for a whole minute. */
+@keyframes cc-ping {
+  75%,
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+/* Dots breathe in opacity rather than bouncing in position: a bouncing indicator draws
+ * the eye away from the text that is actually arriving. */
+@keyframes cc-dot {
+  0%,
+  70%,
+  100% {
+    opacity: 0.25;
+  }
+  35% {
+    opacity: 1;
+  }
+}
+
+/*
+ * Shiki dual-theme output.
+ *
+ * `defaultColor: false` makes Shiki emit both palettes on every token as custom
+ * properties. Picking one with a CSS rule means toggling dark mode is a class change on
+ * <html>, not a re-tokenisation of every code block on screen — which at ten blocks per
+ * reply is the difference between instant and a visible stall.
+ */
+.cc-code .shiki,
+.cc-code .shiki span {
+  color: var(--shiki-light);
+  background-color: var(--shiki-light-bg);
+  font-style: var(--shiki-light-font-style);
+  font-weight: var(--shiki-light-font-weight);
+  text-decoration: var(--shiki-light-text-decoration);
+}
+
+:where(.dark, .dark *) .cc-code .shiki,
+:where(.dark, .dark *) .cc-code .shiki span {
+  color: var(--shiki-dark);
+  background-color: var(--shiki-dark-bg);
+  font-style: var(--shiki-dark-font-style);
+  font-weight: var(--shiki-dark-font-weight);
+  text-decoration: var(--shiki-dark-text-decoration);
+}
+
+/* The surrounding <pre> supplies padding, radius and background; Shiki's own wrapper
+ * should contribute nothing but the tokens. */
+.cc-code .shiki {
+  background-color: transparent !important;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+}
+
+.cc-code .shiki code {
+  display: block;
+  width: fit-content;
+  min-width: 100%;
+}
+
+/* Wrapped mode: long lines fold instead of scrolling horizontally. Continuation lines are
+ * indented so wrapped code still reads as one logical line. */
+.cc-code[data-cc-wrap='true'] .shiki code {
+  width: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.cc-code[data-cc-wrap='true'] .shiki .line {
+  display: inline-block;
+  width: 100%;
+  text-indent: -1.5em;
+  padding-left: 1.5em;
+}
+
+/* Line numbers, opt-in and drawn as a counter so they are never selected when copying. */
+.cc-code[data-cc-numbers='true'] .shiki code {
+  counter-reset: cc-line;
+}
+
+.cc-code[data-cc-numbers='true'] .shiki .line::before {
+  counter-increment: cc-line;
+  content: counter(cc-line);
+  display: inline-block;
+  width: 2ch;
+  margin-right: 1.25em;
+  text-align: right;
+  color: var(--color-cc-faint);
+  user-select: none;
+}
+
+/*
+ * The streaming caret for Markdown text.
+ *
+ * It has to be a pseudo-element on the last rendered block, not a sibling node: a real
+ * element appended after the Markdown tree lands on its own line, because the last block
+ * is a <p>. Attaching it to that <p> puts the caret exactly where the next character will
+ * appear, which is the only position that reads as typing.
+ */
+[data-cc-typing='true'] .cc-markdown > :last-child::after {
+  content: '';
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 0.15em;
+  transform: translateY(0.12em);
+  border-radius: 9999px;
+  background-color: color-mix(in oklch, var(--color-cc-fg) 70%, transparent);
+  animation: var(--animate-cc-blink);
+}
+
+/*
+ * Motion is decorative here — every animation communicates something that is also
+ * conveyed by a label or an icon, so removing it loses nothing.
+ */
+@media (prefers-reduced-motion: reduce) {
+  [data-cc-root] *,
+  [data-cc-root] *::before,
+  [data-cc-root] *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
