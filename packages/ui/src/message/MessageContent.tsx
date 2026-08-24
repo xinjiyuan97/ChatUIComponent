@@ -8,9 +8,11 @@ import { CitationProvider } from '../markdown/Citation'
 import { A2UIPart } from '../parts/A2UIPart'
 import { ErrorPart } from '../parts/ErrorPart'
 import { FilePart } from '../parts/FilePart'
+import { PermissionPart } from '../parts/PermissionPart'
 import { ReasoningPart } from '../parts/ReasoningPart'
 import { SourcesPart } from '../parts/SourcesPart'
 import { TextPart } from '../parts/TextPart'
+import { TodoPart } from '../parts/TodoPart'
 import { ToolCallPart } from '../parts/ToolCallPart'
 
 export type MessageContentProps = {
@@ -66,6 +68,10 @@ export function MessageContent({ message, onRetry, renderPart, className }: Mess
               return <ToolCallPart key={index} part={part} message={message} />
             case 'a2ui':
               return <A2UIPart key={index} part={part} message={message} />
+            case 'permission':
+              return <PermissionPart key={index} part={part} message={message} />
+            case 'todo':
+              return <TodoPart key={index} part={part} />
             case 'file':
               return <FilePart key={index} part={part} />
             case 'error':

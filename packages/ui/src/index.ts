@@ -32,6 +32,8 @@ export * from './parts/TextPart'
 export * from './parts/ReasoningPart'
 export * from './parts/ToolCallPart'
 export * from './parts/A2UIPart'
+export * from './parts/PermissionPart'
+export * from './parts/TodoPart'
 export * from './parts/FilePart'
 export * from './parts/SourcesPart'
 export * from './parts/ErrorPart'
@@ -44,6 +46,9 @@ export * from './markdown/CodeBlock'
 export * from './markdown/Mermaid'
 export * from './markdown/mermaid-renderer'
 export * from './markdown/complete-markdown'
+
+export * from './permission/PermissionMenu'
+export * from './todo/TodoList'
 
 export * from './typing/TypingText'
 

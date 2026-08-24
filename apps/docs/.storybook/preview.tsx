@@ -46,7 +46,16 @@ const preview: Preview = {
         order: [
           'Overview',
           'Chat',
-          ['End to End', 'Message', 'Parts', 'Markdown', 'Composer', 'Reactions'],
+          [
+            'End to End',
+            'Message',
+            'Parts',
+            'Permission',
+            'Todo',
+            'Markdown',
+            'Composer',
+            'Reactions',
+          ],
           'Conversations',
           'A2UI',
           'Foundations',

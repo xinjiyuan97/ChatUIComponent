@@ -295,6 +295,48 @@ export const DiagramIcon = (props: IconProps) => (
   </Icon>
 )
 
+/** Marks a pending approval. The one glyph in the set that means "stop and read". */
+export const ShieldIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M12 3.2 4.8 6v6.1c0 4 3 7.2 7.2 8.7 4.2-1.5 7.2-4.7 7.2-8.7V6L12 3.2Z" />
+  </Icon>
+)
+
+/** Read-back glyph for a denied request; the mirror of `CheckIcon`. */
+export const BanIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="m6 6 12 12" />
+  </Icon>
+)
+
+/** Header of a todo block. */
+export const ListChecksIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M3 6.5 4.5 8l3-3M3 17.5 4.5 19l3-3" />
+    <path d="M11 6.5h10M11 17.5h10" />
+  </Icon>
+)
+
+/**
+ * Todo row status: not started, and started.
+ *
+ * A hollow ring versus a ring with a filled core — the difference is legible at 13px and,
+ * unlike a colour change, survives being printed or read without colour vision.
+ */
+export const CircleIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <circle cx="12" cy="12" r="7.5" />
+  </Icon>
+)
+
+export const CircleDotIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <circle cx="12" cy="12" r="7.5" />
+    <circle cx="12" cy="12" r="3.4" fill="currentColor" stroke="none" />
+  </Icon>
+)
+
 /**
  * Callout glyphs.
  *
