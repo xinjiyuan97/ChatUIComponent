@@ -108,10 +108,87 @@ type MessagePart =
       error?: string
     }
   | { type: 'a2ui'; surfaceId: string; spec: A2UINode; resolved?: boolean }
+  | { type: 'permission'; request: PermissionRequest; resolution?: PermissionResolution }
+  | { type: 'todo'; todoId: string; items: TodoItem[]; title?: string }
   | { type: 'file' | 'source' | 'error' | 'custom' /* … */ }
 ```
 
 `MessageContent` 按 `part.type` 分派；传 `renderPart` 可以逐 part 接管，返回 `undefined` 则回退到默认渲染。
+
+---
+
+## 权限审批与任务清单
+
+agent 循环里绕不开的两块交互。都是一等 part —— transport 里 emit 事件就渲染，不用在视图层接线。
+
+### 权限审批
+
+```ts
+// agent 要跑命令、写文件、发外部请求之前，先停下来问人
+emit({
+  type: 'permission-request',
+  request: {
+    id: 'req-1',
+    toolName: 'bash',
+    toolCallId: 't1', // 关回它所属的 ToolPart
+    detail: 'rm -rf node_modules', // 被审批的东西本身，等宽块原样显示
+    risk: 'high', // 'low' | 'medium' | 'high'，只影响整卡着色
+  },
+})
+```
+
+```tsx
+<ChatThemeProvider
+  onPermissionDecision={(resolution) => {
+    // resolution.decision: 'allow-once' | 'allow-always' | 'deny'
+    // 'allow-always' 要不要记住、拒绝之后 agent 怎么恢复，都是宿主的决定 —— 库不替你做
+    void resumeAgent(resolution)
+  }}
+>
+```
+
+**内联在消息流里，不是弹窗。** 弹窗会盖住导致这次请求的推理和工具调用，而那正是判断该不该批准所需的上下文；而且弹窗答完就消失，transcript 里留不下痕迹。这张卡审批完原地塌成一行只读记录。
+
+键盘按终端菜单的习惯：`↑` `↓` 循环、数字键 `1`–`9` 直接提交、`Enter` 提交当前项、`Esc` 等于「拒绝」。「拒绝」选中后展开理由框而不立即提交 —— 「别这么做，换个方式」是回给模型信息量最大的答案；理由留空也能提交，没有解释的「不」仍然是有效回答。
+
+服务端策略自动放行、或者用户在另一个端上批了，走 `permission-resolved` 事件把结果补进来。本地点击不经过 reducer，直接走上面的回调。
+
+状态机在 `usePermissionMenu` 里，不用这套皮的话 hook 单独拿走：
+
+```ts
+const menu = usePermissionMenu({ request, onDecide })
+// → { options, activeIndex, activeOption, reason, setReason, canSubmit,
+//     choose, submit, onKeyDown, settled, … }
+```
+
+### 任务清单
+
+```ts
+emit({
+  type: 'todo',
+  todoId: 'plan', // 重发同一个 id 是原地替换，不是追加
+  items: [
+    { id: '1', title: '通读 auth.ts 的刷新路径', status: 'completed' },
+    {
+      id: '2',
+      title: '加共享 in-flight promise',
+      status: 'in-progress',
+      activeTitle: '正在改 getToken',
+    },
+    { id: '3', title: '补回归测试', status: 'pending' },
+  ],
+})
+```
+
+`todoId` 是长任务能读得下去的关键：agent 一轮跑下来会改十几次计划，每次追加会把对话冲掉。
+
+推进中默认展开、全部完成后默认收起（和推理块同一条规则），用户手动切过就永远听用户的。**取消项不计入分母** —— 砍掉最后两步的计划是*做完了*，进度条永远停在 5/7 会被读成卡住了；它们仍然带删除线留在列表里。
+
+默认只读：计划是 agent 的，渲染一排点不动的假勾选框比不渲染更糟。要把编辑权交回用户，直接用 `TodoList` 并传 `onToggle`：
+
+```tsx
+<TodoList items={items} onToggle={(item, next) => update(item.id, next)} />
+```
 
 ---
 

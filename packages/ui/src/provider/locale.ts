@@ -14,6 +14,40 @@ export type ChatLocale = {
   toolArguments: string
   toolResult: string
 
+  /** Accessible name of the approval menu. */
+  permissionMenu: string
+  /** Card title when the request carries no `title` of its own. */
+  permissionTitle: (tool: string) => string
+  permissionAllowOnce: string
+  permissionAllowAlways: string
+  permissionDeny: string
+  /** Second line under each built-in option. */
+  permissionAllowOnceHint: string
+  permissionAllowAlwaysHint: string
+  permissionDenyHint: string
+  permissionReasonLabel: string
+  permissionReasonPlaceholder: string
+  permissionSubmit: string
+  /** Risk tags on the card header. `low` is intentionally unlabelled. */
+  permissionRiskMedium: string
+  permissionRiskHigh: string
+  /** Read-back once decided. */
+  permissionAllowedOnce: string
+  permissionAllowedAlways: string
+  permissionDenied: string
+
+  todos: string
+  /** Counter in the todo header, e.g. 「3/7」. */
+  todoProgress: (completed: number, total: number) => string
+  todoPending: string
+  todoInProgress: string
+  todoCompleted: string
+  todoCancelled: string
+  todoAllDone: string
+  todoEmpty: string
+  /** Accessible name of a checkable todo row. */
+  todoToggle: (title: string) => string
+
   copy: string
   copied: string
   wrapLines: string
@@ -129,6 +163,33 @@ export const zhCN: ChatLocale = {
   toolArguments: '参数',
   toolResult: '结果',
 
+  permissionMenu: '审批操作',
+  permissionTitle: (tool) => `${tool} 请求执行权限`,
+  permissionAllowOnce: '允许这一次',
+  permissionAllowAlways: '本次会话都允许',
+  permissionDeny: '拒绝',
+  permissionAllowOnceHint: '只放行这一次，下次还会再问',
+  permissionAllowAlwaysHint: '这个会话内不再询问同类操作',
+  permissionDenyHint: '告诉它换一种做法',
+  permissionReasonLabel: '拒绝原因',
+  permissionReasonPlaceholder: '为什么不能这么做？（会发回给模型）',
+  permissionSubmit: '提交',
+  permissionRiskMedium: '需留意',
+  permissionRiskHigh: '高风险',
+  permissionAllowedOnce: '已允许',
+  permissionAllowedAlways: '已允许（本次会话）',
+  permissionDenied: '已拒绝',
+
+  todos: '任务清单',
+  todoProgress: (completed, total) => `${completed}/${total}`,
+  todoPending: '待办',
+  todoInProgress: '进行中',
+  todoCompleted: '已完成',
+  todoCancelled: '已取消',
+  todoAllDone: '全部完成',
+  todoEmpty: '暂无任务',
+  todoToggle: (title) => `切换「${title}」的完成状态`,
+
   copy: '复制',
   copied: '已复制',
   wrapLines: '自动换行',
@@ -239,6 +300,33 @@ export const enUS: ChatLocale = {
   toolFailed: 'Failed',
   toolArguments: 'Arguments',
   toolResult: 'Result',
+
+  permissionMenu: 'Approve this action',
+  permissionTitle: (tool) => `${tool} wants permission`,
+  permissionAllowOnce: 'Allow once',
+  permissionAllowAlways: 'Allow for this session',
+  permissionDeny: 'Deny',
+  permissionAllowOnceHint: 'Just this one time — you will be asked again',
+  permissionAllowAlwaysHint: 'Stop asking about this kind of action in this chat',
+  permissionDenyHint: 'Tell it to do something else instead',
+  permissionReasonLabel: 'Reason',
+  permissionReasonPlaceholder: 'Why not? (sent back to the model)',
+  permissionSubmit: 'Submit',
+  permissionRiskMedium: 'Review',
+  permissionRiskHigh: 'High risk',
+  permissionAllowedOnce: 'Allowed',
+  permissionAllowedAlways: 'Allowed for this session',
+  permissionDenied: 'Denied',
+
+  todos: 'Tasks',
+  todoProgress: (completed, total) => `${completed}/${total}`,
+  todoPending: 'To do',
+  todoInProgress: 'In progress',
+  todoCompleted: 'Done',
+  todoCancelled: 'Cancelled',
+  todoAllDone: 'All done',
+  todoEmpty: 'Nothing planned',
+  todoToggle: (title) => `Toggle “${title}”`,
 
   copy: 'Copy',
   copied: 'Copied',

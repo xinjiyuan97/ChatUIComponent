@@ -247,4 +247,88 @@ describe('applyEvent', () => {
     ])
     expect(message.parts).toEqual([])
   })
+
+  it('replaces a re-sent permission request in place', () => {
+    const message = replay([
+      { type: 'permission-request', request: { id: 'p1', toolName: 'bash', detail: 'ls' } },
+      { type: 'text-delta', delta: 'after' },
+      { type: 'permission-request', request: { id: 'p1', toolName: 'bash', detail: 'ls -la' } },
+    ])
+
+    // Two menus for one action would leave one of them unanswerable.
+    expect(message.parts.map((part) => part.type)).toEqual(['permission', 'text'])
+    expect(message.parts[0]).toMatchObject({ request: { detail: 'ls -la' } })
+  })
+
+  it('attaches an out-of-band resolution to its request', () => {
+    const message = replay([
+      { type: 'permission-request', request: { id: 'p1', toolName: 'bash' } },
+      {
+        type: 'permission-resolved',
+        requestId: 'p1',
+        resolution: { requestId: 'p1', option: 'allow-once', decision: 'allow-once' },
+      },
+    ])
+
+    expect(message.parts[0]).toMatchObject({
+      type: 'permission',
+      resolution: { decision: 'allow-once' },
+    })
+  })
+
+  it('ignores a resolution for a request it never saw', () => {
+    const message = replay([
+      {
+        type: 'permission-resolved',
+        requestId: 'ghost',
+        resolution: { requestId: 'ghost', option: 'deny', decision: 'deny' },
+      },
+    ])
+    expect(message.parts).toEqual([])
+  })
+
+  it('leaves an undecided permission request pending when the stream ends', () => {
+    const message = replay([
+      { type: 'permission-request', request: { id: 'p1', toolName: 'bash' } },
+      { type: 'message-end' },
+    ])
+
+    // Waiting on a human is the normal terminal state of an approval turn; auto-denying
+    // here would be the renderer making a security decision that belongs to the host.
+    expect(message.parts[0]).toEqual({
+      type: 'permission',
+      request: { id: 'p1', toolName: 'bash' },
+    })
+    expect(message.status).toBe('complete')
+  })
+
+  it('replaces a todo list in place when the plan is revised', () => {
+    const message = replay([
+      { type: 'todo', todoId: 'plan', items: [{ id: '1', title: '读代码', status: 'pending' }] },
+      { type: 'text-delta', delta: 'after' },
+      {
+        type: 'todo',
+        todoId: 'plan',
+        items: [
+          { id: '1', title: '读代码', status: 'completed' },
+          { id: '2', title: '改代码', status: 'in-progress' },
+        ],
+      },
+    ])
+
+    // An agent revises its plan many times per run; appending each revision would bury
+    // the conversation under checklists.
+    expect(message.parts.map((part) => part.type)).toEqual(['todo', 'text'])
+    expect(message.parts[0]).toMatchObject({ todoId: 'plan', items: [{}, { id: '2' }] })
+  })
+
+  it('keeps two todo lists apart when their ids differ', () => {
+    const message = replay([
+      { type: 'todo', items: [{ id: '1', title: 'a', status: 'pending' }] },
+      { type: 'todo', todoId: 'sub', items: [{ id: '2', title: 'b', status: 'pending' }] },
+    ])
+
+    expect(message.parts.map((part) => part.type)).toEqual(['todo', 'todo'])
+    expect(message.parts[0]).toMatchObject({ todoId: 'default' })
+  })
 })

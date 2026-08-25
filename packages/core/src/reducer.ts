@@ -147,6 +147,39 @@ export function applyEvent(
       return replacePart(message, index, { ...part, data: setPath(data, path, value, op) })
     }
 
+    case 'permission-request': {
+      const index = message.parts.findIndex(
+        (p) => p.type === 'permission' && p.request.id === event.request.id,
+      )
+      const next = { type: 'permission' as const, request: event.request }
+      // A re-sent request updates the card in place. Stacking two menus for the same
+      // action would leave one of them unanswerable.
+      return index === -1
+        ? withParts(message, [...message.parts, next])
+        : replacePart(message, index, next)
+    }
+
+    case 'permission-resolved': {
+      const index = message.parts.findIndex(
+        (p) => p.type === 'permission' && p.request.id === event.requestId,
+      )
+      if (index === -1) return message
+      const part = message.parts[index]
+      if (part?.type !== 'permission') return message
+      return replacePart(message, index, { ...part, resolution: event.resolution })
+    }
+
+    case 'todo': {
+      const todoId = event.todoId ?? 'default'
+      const index = message.parts.findIndex((p) => p.type === 'todo' && p.todoId === todoId)
+      const next = { type: 'todo' as const, todoId, items: event.items, title: event.title }
+      // Same in-place replacement as `a2ui`: an agent revises its plan many times per run,
+      // and appending each revision would bury the conversation under checklists.
+      return index === -1
+        ? withParts(message, [...message.parts, next])
+        : replacePart(message, index, next)
+    }
+
     case 'file':
       return withParts(message, [
         ...message.parts,
@@ -281,7 +314,14 @@ function finaliseToolInput(part: ToolPart): Partial<ToolPart> {
   }
 }
 
-/** On stream end, close any reasoning block that never got an explicit end event. */
+/**
+ * On stream end, close any reasoning block that never got an explicit end event.
+ *
+ * An undecided permission request is deliberately left alone. A stream that ends with a
+ * menu still on screen is the *normal* shape of an approval turn — the agent stopped
+ * precisely because it is waiting for an answer — and auto-denying it here would be the
+ * renderer making a security decision that belongs to the host.
+ */
 function closeDanglingParts(parts: MessagePart[], now: number): MessagePart[] {
   return parts.map((part) => {
     if (part.type === 'reasoning' && part.durationMs === undefined && part.startedAt) {

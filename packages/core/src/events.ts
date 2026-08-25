@@ -1,4 +1,11 @@
-import type { A2UINode, A2UIPatch, TokenUsage } from './types'
+import type {
+  A2UINode,
+  A2UIPatch,
+  PermissionRequest,
+  PermissionResolution,
+  TodoItem,
+  TokenUsage,
+} from './types'
 
 /**
  * The normalised event stream.
@@ -26,6 +33,16 @@ export type ChatEvent =
   | { type: 'tool-error'; toolCallId: string; error: string }
   | { type: 'a2ui'; surfaceId: string; spec: A2UINode; data?: Record<string, unknown> }
   | { type: 'a2ui-patch'; surfaceId: string; patch: A2UIPatch }
+  /** The agent is blocked, waiting for a human to approve an action. */
+  | { type: 'permission-request'; request: PermissionRequest }
+  /**
+   * A request was decided somewhere other than this UI — a server-side policy let it
+   * through, or the user answered on another device. A local click does not go through
+   * here; it goes straight to the host's callback.
+   */
+  | { type: 'permission-resolved'; requestId: string; resolution: PermissionResolution }
+  /** The agent's plan. Re-emitting the same `todoId` replaces it rather than appending. */
+  | { type: 'todo'; todoId?: string; items: TodoItem[]; title?: string }
   | { type: 'file'; url: string; mediaType: string; name?: string }
   | { type: 'source'; url: string; title?: string; snippet?: string }
   | { type: 'custom'; name: string; data: unknown }

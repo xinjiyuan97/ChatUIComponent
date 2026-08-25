@@ -1,6 +1,6 @@
 'use client'
 
-import type { ChatMessage, ToolPart } from '@agent-chat/core'
+import type { ChatMessage, PermissionResolution, ToolPart } from '@agent-chat/core'
 import type { A2UIAction, A2UIRegistry } from '@agent-chat/a2ui'
 import { createContext, useContext, useMemo, type ComponentType, type ReactNode } from 'react'
 
@@ -34,6 +34,14 @@ export type ChatThemeContextValue = {
   toolRenderers: Record<string, ToolRenderer>
   a2uiRegistry: A2UIRegistry
   onA2UIAction?: (action: A2UIAction, message: ChatMessage) => void
+  /**
+   * Called when the user answers an approval prompt.
+   *
+   * Unset means the menu still works and still shows its receipt, but nothing downstream
+   * happens — resuming the agent and remembering a session-wide grant are the host's
+   * decisions, and there is no safe default for either.
+   */
+  onPermissionDecision?: (resolution: PermissionResolution, message: ChatMessage) => void
   renderUserAvatar?: AvatarRenderer
   renderAssistantAvatar?: AvatarRenderer
   /** Shiki themes, keyed by colour scheme. */
@@ -84,6 +92,7 @@ export type ChatThemeProviderProps = {
   toolRenderers?: Record<string, ToolRenderer>
   a2uiRegistry?: A2UIRegistry
   onA2UIAction?: (action: A2UIAction, message: ChatMessage) => void
+  onPermissionDecision?: (resolution: PermissionResolution, message: ChatMessage) => void
   renderUserAvatar?: AvatarRenderer
   renderAssistantAvatar?: AvatarRenderer
   codeThemes?: { light: string; dark: string }
@@ -110,6 +119,7 @@ export function ChatThemeProvider(props: ChatThemeProviderProps) {
     toolRenderers,
     a2uiRegistry,
     onA2UIAction,
+    onPermissionDecision,
     renderUserAvatar,
     renderAssistantAvatar,
     codeThemes,
@@ -127,6 +137,7 @@ export function ChatThemeProvider(props: ChatThemeProviderProps) {
       toolRenderers: toolRenderers ?? {},
       a2uiRegistry: a2uiRegistry ?? {},
       onA2UIAction,
+      onPermissionDecision,
       renderUserAvatar,
       renderAssistantAvatar,
       codeThemes: codeThemes ?? FALLBACK.codeThemes,
@@ -140,6 +151,7 @@ export function ChatThemeProvider(props: ChatThemeProviderProps) {
       toolRenderers,
       a2uiRegistry,
       onA2UIAction,
+      onPermissionDecision,
       renderUserAvatar,
       renderAssistantAvatar,
       codeThemes,
