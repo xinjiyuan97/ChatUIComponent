@@ -1,6 +1,6 @@
 'use client'
 
-import type { TodoPart as TodoPartData } from '@agent-chat/core'
+import type { TodoPart as TodoPartData } from '@xinjiyuan97/chat-core'
 
 import { TodoList } from '../todo/TodoList'
 

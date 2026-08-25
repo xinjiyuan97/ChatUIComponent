@@ -1,6 +1,6 @@
 'use client'
 
-import type { ReasoningPart as ReasoningPartData } from '@agent-chat/core'
+import type { ReasoningPart as ReasoningPartData } from '@xinjiyuan97/chat-core'
 import { useEffect, useRef, useState } from 'react'
 
 import { cn } from '../lib/cn'

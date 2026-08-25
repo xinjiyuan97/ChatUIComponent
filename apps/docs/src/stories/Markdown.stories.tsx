@@ -7,7 +7,7 @@ import {
   Markdown,
   TypingText,
   completeMarkdown,
-} from '@agent-chat/ui'
+} from '@xinjiyuan97/chat-ui'
 
 import {
   MARKDOWN_CALLOUTS,
@@ -152,7 +152,7 @@ export async function getToken(): Promise<Token> {
       />
       <CodeBlock
         language="bash"
-        code={`pnpm add @agent-chat/ui @agent-chat/core
+        code={`pnpm add @xinjiyuan97/chat-ui @xinjiyuan97/chat-core
 pnpm add -D tailwindcss@next`}
       />
       <CodeBlock
@@ -215,11 +215,11 @@ console.log(token)`}
         />
         {/* Defines and prints nothing: an empty-but-successful run still shows a panel,
             so "done" and "nothing happened" stay distinguishable. */}
-        <CodeBlock language="typescript" code={`type Token = { value: string; expiresIn: number }`} />
         <CodeBlock
-          language="sql"
-          code={`select status, count(*) from tokens group by status;`}
+          language="typescript"
+          code={`type Token = { value: string; expiresIn: number }`}
         />
+        <CodeBlock language="sql" code={`select status, count(*) from tokens group by status;`} />
         {/* Opting a single block out, even though a runner is available. */}
         <CodeBlock language="bash" runnable={false} code={`rm -rf ./dist`} />
       </div>

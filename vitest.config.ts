@@ -11,8 +11,8 @@ export default defineConfig({
     /* Tests run against sources, matching the tsconfig `paths` mapping, so a change in
      * core is picked up by ui's tests without an intervening build. */
     alias: {
-      '@agent-chat/core': resolve('./packages/core/src/index.ts'),
-      '@agent-chat/a2ui': resolve('./packages/a2ui/src/index.ts'),
+      '@xinjiyuan97/chat-core': resolve('./packages/core/src/index.ts'),
+      '@xinjiyuan97/chat-a2ui': resolve('./packages/a2ui/src/index.ts'),
     },
   },
   test: {

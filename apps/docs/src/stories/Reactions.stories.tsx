@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { Meta, StoryObj } from '@storybook/react'
 
-import type { Reaction } from '@agent-chat/core'
+import type { Reaction } from '@xinjiyuan97/chat-core'
 import {
   CopyButton,
   EditButton,
@@ -11,7 +11,7 @@ import {
   ReactionBar,
   RegenerateButton,
   ShareButton,
-} from '@agent-chat/ui'
+} from '@xinjiyuan97/chat-ui'
 
 import { ASSISTANT_FULL, MARKDOWN_SHORT, NOW } from '../fixtures'
 

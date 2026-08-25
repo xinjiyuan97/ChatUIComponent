@@ -1,6 +1,6 @@
 'use client'
 
-import type { Agent, Conversation } from '@agent-chat/core'
+import type { Agent, Conversation } from '@xinjiyuan97/chat-core'
 import { useCallback, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'

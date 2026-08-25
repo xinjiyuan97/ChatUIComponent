@@ -26,10 +26,12 @@ const config: StorybookConfig = {
       ...viteConfig.resolve,
       alias: {
         ...viteConfig.resolve?.alias,
-        '@agent-chat/core': fromHere('../../../packages/core/src/index.ts'),
-        '@agent-chat/a2ui': fromHere('../../../packages/a2ui/src/index.ts'),
-        '@agent-chat/ui/a2ui-registry': fromHere('../../../packages/ui/src/a2ui-registry/index.ts'),
-        '@agent-chat/ui': fromHere('../../../packages/ui/src/index.ts'),
+        '@xinjiyuan97/chat-core': fromHere('../../../packages/core/src/index.ts'),
+        '@xinjiyuan97/chat-a2ui': fromHere('../../../packages/a2ui/src/index.ts'),
+        '@xinjiyuan97/chat-ui/a2ui-registry': fromHere(
+          '../../../packages/ui/src/a2ui-registry/index.ts',
+        ),
+        '@xinjiyuan97/chat-ui': fromHere('../../../packages/ui/src/index.ts'),
       },
     }
 

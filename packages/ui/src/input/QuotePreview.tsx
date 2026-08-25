@@ -1,6 +1,6 @@
 'use client'
 
-import type { QuotedMessage } from '@agent-chat/core'
+import type { QuotedMessage } from '@xinjiyuan97/chat-core'
 
 import { cn } from '../lib/cn'
 import { CloseIcon, QuoteIcon } from '../icons'

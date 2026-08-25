@@ -1,6 +1,6 @@
 'use client'
 
-import type { SourcePart } from '@agent-chat/core'
+import type { SourcePart } from '@xinjiyuan97/chat-core'
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'

@@ -6,7 +6,7 @@ import {
   type ChatMessage,
   type QuotedMessage,
   type Reaction,
-} from '@agent-chat/core'
+} from '@xinjiyuan97/chat-core'
 import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'

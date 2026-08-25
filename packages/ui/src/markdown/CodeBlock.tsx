@@ -1,6 +1,6 @@
 'use client'
 
-import { useCopyToClipboard } from '@agent-chat/core'
+import { useCopyToClipboard } from '@xinjiyuan97/chat-core'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
 
 import { cn } from '../lib/cn'
@@ -169,7 +169,11 @@ function CodeBlockImpl({
               size="sm"
               label={copied ? locale.copied : locale.copy}
               icon={
-                copied ? <CheckIcon size={14} className="text-cc-success" /> : <CopyIcon size={14} />
+                copied ? (
+                  <CheckIcon size={14} className="text-cc-success" />
+                ) : (
+                  <CopyIcon size={14} />
+                )
               }
               onClick={() => void copy(code)}
             />
@@ -240,13 +244,7 @@ function RunButton({
  * output only means anything next to the code that produced it, and a detached card
  * would compete with the message's own parts for the reader's attention.
  */
-function CodeRunOutput({
-  result,
-  onClear,
-}: {
-  result: CodeRunResult
-  onClear?: () => void
-}) {
+function CodeRunOutput({ result, onClear }: { result: CodeRunResult; onClear?: () => void }) {
   const locale = useLocale()
   const failed = result.status === 'error'
   const duration = formatDuration(result.durationMs)

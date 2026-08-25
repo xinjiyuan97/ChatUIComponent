@@ -12,7 +12,7 @@
     "dev": "pnpm -r --parallel --filter \"./packages/*\" dev",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "pnpm -r exec tsc --noEmit",
+    "typecheck": "pnpm -r --filter \"./packages/*\" typecheck",
     "lint": "eslint .",
     "format": "prettier --write \"**/*.{ts,tsx,css,md,json}\"",
     "storybook": "pnpm --filter @agent-chat/docs storybook",

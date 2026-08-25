@@ -1,6 +1,6 @@
 ---
-'@agent-chat/core': minor
-'@agent-chat/ui': minor
+'@xinjiyuan97/chat-core': minor
+'@xinjiyuan97/chat-ui': minor
 ---
 
 多模态输入：附件上传与语音输入

@@ -6,8 +6,8 @@ import type {
   FilePart,
   QuotedMessage,
   VoiceController,
-} from '@agent-chat/core'
-import { useAutoResizeTextarea } from '@agent-chat/core'
+} from '@xinjiyuan97/chat-core'
+import { useAutoResizeTextarea } from '@xinjiyuan97/chat-core'
 import {
   useCallback,
   useEffect,

@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 
-import { createSSETransport, useAttachments, useChat, useVoiceInput } from '@agent-chat/core'
+import { createSSETransport, useAttachments, useChat, useVoiceInput } from '@xinjiyuan97/chat-core'
 import {
   ChatContainer,
   ChatEmptyState,
@@ -12,8 +12,8 @@ import {
   Message,
   PromptInput,
   SuggestionChips,
-} from '@agent-chat/ui'
-import { defaultA2UIRegistry } from '@agent-chat/ui/a2ui-registry'
+} from '@xinjiyuan97/chat-ui'
+import { defaultA2UIRegistry } from '@xinjiyuan97/chat-ui/a2ui-registry'
 
 const SUGGESTIONS = ['介绍一下这个组件库', '流式输出是怎么做的', '给我看一张 A2UI 卡片']
 

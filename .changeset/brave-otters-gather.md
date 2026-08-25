@@ -1,6 +1,6 @@
 ---
-'@agent-chat/core': minor
-'@agent-chat/ui': minor
+'@xinjiyuan97/chat-core': minor
+'@xinjiyuan97/chat-ui': minor
 ---
 
 会话列表支持 agent 分组：一个 agent 下面挂多个会话

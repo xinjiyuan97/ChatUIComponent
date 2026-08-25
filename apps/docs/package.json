@@ -9,9 +9,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@agent-chat/a2ui": "workspace:*",
-    "@agent-chat/core": "workspace:*",
-    "@agent-chat/ui": "workspace:*",
+    "@xinjiyuan97/chat-a2ui": "workspace:*",
+    "@xinjiyuan97/chat-core": "workspace:*",
+    "@xinjiyuan97/chat-ui": "workspace:*",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

@@ -1,8 +1,12 @@
 import { useMemo, useState, type ComponentProps } from 'react'
 import type { Meta, StoryObj } from '@storybook/react'
 
-import type { Conversation } from '@agent-chat/core'
-import { ConversationList, ConversationListSkeleton, ConversationSidebar } from '@agent-chat/ui'
+import type { Conversation } from '@xinjiyuan97/chat-core'
+import {
+  ConversationList,
+  ConversationListSkeleton,
+  ConversationSidebar,
+} from '@xinjiyuan97/chat-ui'
 
 import {
   AGENTS,
