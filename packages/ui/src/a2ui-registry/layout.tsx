@@ -1,6 +1,6 @@
 'use client'
 
-import type { A2UIComponentProps } from '@xinjiyuan97/a2ui'
+import type { A2UIComponentProps } from '@xinjiyuan97/chat-a2ui'
 import type { FormEvent } from 'react'
 
 import { cn } from '../lib/cn'

@@ -1,4 +1,4 @@
-# @xinjiyuan97/ui
+# @xinjiyuan97/chat-ui
 
 给 agent 项目复用的 React 聊天组件：流式输出、思考过程、function call、Markdown、代码块、reaction、会话列表，以及一个让 agent 直接吐 UI 的 A2UI 口子。
 
@@ -7,7 +7,7 @@
 完整文档在[仓库根 README](../../README.md)，可交互的组件目录在 Storybook（`pnpm storybook`）。
 
 ```bash
-pnpm add @xinjiyuan97/ui @xinjiyuan97/core @xinjiyuan97/a2ui
+pnpm add @xinjiyuan97/chat-ui @xinjiyuan97/chat-core @xinjiyuan97/chat-a2ui
 ```
 
 Peer：React 18.2+ 或 19。产物带 `"use client"`，Next.js App Router 直接引即可。
@@ -18,16 +18,16 @@ Peer：React 18.2+ 或 19。产物带 `"use client"`，Next.js App Router 直接
 
 ```css
 @import 'tailwindcss';
-@import '@xinjiyuan97/ui/tokens.css';
+@import '@xinjiyuan97/chat-ui/tokens.css';
 
 /* 让 Tailwind 扫到组件里的类名，避免重复生成一份 */
-@source '../node_modules/@xinjiyuan97/ui/dist';
+@source '../node_modules/@xinjiyuan97/chat-ui/dist';
 ```
 
 没用 Tailwind：
 
 ```ts
-import '@xinjiyuan97/ui/style.css'
+import '@xinjiyuan97/chat-ui/style.css'
 ```
 
 暗色主题就是 `<html class="dark">` 一个类，没有别的开关。所有颜色是 oklch 的 CSS 变量，改 token 就能整体换皮。
@@ -39,7 +39,7 @@ import '@xinjiyuan97/ui/style.css'
 ```tsx
 'use client'
 
-import { createSSETransport, useChat } from '@xinjiyuan97/core'
+import { createSSETransport, useChat } from '@xinjiyuan97/chat-core'
 import {
   ChatContainer,
   ChatMessageList,
@@ -47,7 +47,7 @@ import {
   ChatViewport,
   Message,
   PromptInput,
-} from '@xinjiyuan97/ui'
+} from '@xinjiyuan97/chat-ui'
 
 const transport = createSSETransport({ url: '/api/chat' })
 
@@ -95,7 +95,7 @@ export function Chat() {
 
 - **function call**：`toolRenderers={{ read_file: DiffView }}` 按工具名接管渲染，没注册的走通用 JSON 面板。
 - **任意 part**：`<Message renderPart={...} />`，返回 `undefined` 回退到默认渲染。
-- **A2UI**：`a2uiRegistry={{ ...defaultA2UIRegistry, Chart: MyChart }}`，默认组件集从 `@xinjiyuan97/ui/a2ui-registry` 引入。
+- **A2UI**：`a2uiRegistry={{ ...defaultA2UIRegistry, Chart: MyChart }}`，默认组件集从 `@xinjiyuan97/chat-ui/a2ui-registry` 引入。
 - **代码运行**：`onRunCode` 不传就没有运行按钮。**本库不执行任何代码** —— 没有 `eval`、没有 Worker、没有隐式 fetch，跑在哪里由你决定。
 - **Mermaid**：` ```mermaid ` 围栏渲染成图，`mermaid` 是可选 peer 依赖（`pnpm add mermaid`）；没装或语法有误就退化成代码块，不会把内容丢掉。
 

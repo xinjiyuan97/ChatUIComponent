@@ -1,7 +1,7 @@
 'use client'
 
-import type { ChatMessage, PermissionResolution, ToolPart } from '@xinjiyuan97/core'
-import type { A2UIAction, A2UIRegistry } from '@xinjiyuan97/a2ui'
+import type { ChatMessage, PermissionResolution, ToolPart } from '@xinjiyuan97/chat-core'
+import type { A2UIAction, A2UIRegistry } from '@xinjiyuan97/chat-a2ui'
 import { createContext, useContext, useMemo, type ComponentType, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'

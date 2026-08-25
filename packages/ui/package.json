@@ -1,5 +1,5 @@
 {
-  "name": "@xinjiyuan97/ui",
+  "name": "@xinjiyuan97/chat-ui",
   "version": "0.1.0",
   "description": "Beautiful, minimal React components for agent chat interfaces.",
   "license": "MIT",
@@ -57,8 +57,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@xinjiyuan97/a2ui": "workspace:*",
-    "@xinjiyuan97/core": "workspace:*",
+    "@xinjiyuan97/chat-a2ui": "workspace:*",
+    "@xinjiyuan97/chat-core": "workspace:*",
     "clsx": "^2.1.1",
     "react-markdown": "^9.0.1",
     "remark-gfm": "^4.0.0",

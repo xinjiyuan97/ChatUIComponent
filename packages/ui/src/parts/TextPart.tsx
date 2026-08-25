@@ -1,6 +1,6 @@
 'use client'
 
-import { useSmoothText, type TextPart as TextPartData } from '@xinjiyuan97/core'
+import { useSmoothText, type TextPart as TextPartData } from '@xinjiyuan97/chat-core'
 
 import { cn } from '../lib/cn'
 import { Markdown } from '../markdown/Markdown'

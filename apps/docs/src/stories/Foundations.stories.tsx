@@ -13,7 +13,7 @@ import {
   CopyIcon,
   SearchIcon,
   StreamingCursor,
-} from '@xinjiyuan97/ui'
+} from '@xinjiyuan97/chat-ui'
 
 const meta = {
   title: 'Foundations/Tokens',

@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import type { Meta, StoryObj } from '@storybook/react'
 
-import { A2UIRenderer, type A2UIAction, type A2UINode } from '@xinjiyuan97/a2ui'
-import { defaultA2UIRegistry } from '@xinjiyuan97/ui/a2ui-registry'
+import { A2UIRenderer, type A2UIAction, type A2UINode } from '@xinjiyuan97/chat-a2ui'
+import { defaultA2UIRegistry } from '@xinjiyuan97/chat-ui/a2ui-registry'
 
 import { DEPLOY_FORM_SPEC, STATUS_DATA, STATUS_SPEC } from '../fixtures'
 

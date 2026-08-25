@@ -7,6 +7,6 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   /* No `treeshake`: tsup's Rollup pass strips the `"use client"` banner below. */
-  external: ['react', 'react-dom', '@xinjiyuan97/core'],
+  external: ['react', 'react-dom', '@xinjiyuan97/chat-core'],
   banner: { js: '"use client";' },
 })

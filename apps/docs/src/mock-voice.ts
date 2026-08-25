@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import type { VoiceController, VoiceInputMode } from '@xinjiyuan97/core'
+import type { VoiceController, VoiceInputMode } from '@xinjiyuan97/chat-core'
 
 /* A sentence dictated one fragment at a time, the way a recogniser actually returns it. */
 const FRAGMENTS = [

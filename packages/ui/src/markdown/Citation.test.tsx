@@ -1,4 +1,4 @@
-import type { SourcePart } from '@xinjiyuan97/core'
+import type { SourcePart } from '@xinjiyuan97/chat-core'
 import { fireEvent, render, screen } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { describe, expect, it } from 'vitest'

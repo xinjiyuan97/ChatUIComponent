@@ -1,6 +1,6 @@
 'use client'
 
-import type { SourcePart as SourcePartData } from '@xinjiyuan97/core'
+import type { SourcePart as SourcePartData } from '@xinjiyuan97/chat-core'
 import { useEffect, useRef, useState } from 'react'
 
 import { cn } from '../lib/cn'

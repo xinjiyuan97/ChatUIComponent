@@ -1,6 +1,6 @@
 'use client'
 
-import type { ChatMessage, PermissionPart as PermissionPartData } from '@xinjiyuan97/core'
+import type { ChatMessage, PermissionPart as PermissionPartData } from '@xinjiyuan97/chat-core'
 
 import { PermissionMenu } from '../permission/PermissionMenu'
 import { useChatTheme } from '../provider/ChatThemeProvider'

@@ -1,4 +1,4 @@
-import type { A2UINode, A2UIPatch } from '@xinjiyuan97/core'
+import type { A2UINode, A2UIPatch } from '@xinjiyuan97/chat-core'
 import type { ComponentType, ReactNode } from 'react'
 
 export type { A2UINode, A2UIPatch }

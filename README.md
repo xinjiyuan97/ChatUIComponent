@@ -5,9 +5,9 @@
 视觉走清爽极简（Claude / Linear 风）：AI 回复不套气泡、折叠块只用一条细线、强调色一次只出现在一个地方。
 
 ```
-packages/core   @xinjiyuan97/core   零 UI：类型 / store / transport / hooks
-packages/a2ui   @xinjiyuan97/a2ui   A2UI 协议类型 + 渲染器
-packages/ui     @xinjiyuan97/ui     组件 + design token + 默认 A2UI 组件集
+packages/core   @xinjiyuan97/chat-core   零 UI：类型 / store / transport / hooks
+packages/a2ui   @xinjiyuan97/chat-a2ui   A2UI 协议类型 + 渲染器
+packages/ui     @xinjiyuan97/chat-ui     组件 + design token + 默认 A2UI 组件集
 apps/docs                          Storybook（文档站 + 调试台）
 ```
 
@@ -18,7 +18,7 @@ apps/docs                          Storybook（文档站 + 调试台）
 ## 安装
 
 ```bash
-pnpm add @xinjiyuan97/ui @xinjiyuan97/core @xinjiyuan97/a2ui
+pnpm add @xinjiyuan97/chat-ui @xinjiyuan97/chat-core @xinjiyuan97/chat-a2ui
 ```
 
 Peer：React 18.2+ 或 19。产物带 `"use client"`，Next.js App Router 直接引即可。
@@ -30,16 +30,16 @@ Peer：React 18.2+ 或 19。产物带 `"use client"`，Next.js App Router 直接
 ```css
 /* app.css */
 @import 'tailwindcss';
-@import '@xinjiyuan97/ui/tokens.css';
+@import '@xinjiyuan97/chat-ui/tokens.css';
 
 /* 让 Tailwind 扫到组件里的类名，避免重复生成一份 */
-@source '../node_modules/@xinjiyuan97/ui/dist';
+@source '../node_modules/@xinjiyuan97/chat-ui/dist';
 ```
 
 没用 Tailwind：
 
 ```ts
-import '@xinjiyuan97/ui/style.css'
+import '@xinjiyuan97/chat-ui/style.css'
 ```
 
 暗色主题就是 `<html class="dark">` 一个类，没有别的开关。
@@ -51,7 +51,7 @@ import '@xinjiyuan97/ui/style.css'
 ```tsx
 'use client'
 
-import { createSSETransport, useChat } from '@xinjiyuan97/core'
+import { createSSETransport, useChat } from '@xinjiyuan97/chat-core'
 import {
   ChatContainer,
   ChatMessageList,
@@ -59,7 +59,7 @@ import {
   ChatViewport,
   Message,
   PromptInput,
-} from '@xinjiyuan97/ui'
+} from '@xinjiyuan97/chat-ui'
 
 const transport = createSSETransport({ url: '/api/chat' })
 
@@ -197,7 +197,7 @@ emit({
 两个 headless hook，`PromptInput` 只是把它们画出来。不用这套 UI 的话，hook 单独拿走即可。
 
 ```tsx
-import { useAttachments, useVoiceInput } from '@xinjiyuan97/core'
+import { useAttachments, useVoiceInput } from '@xinjiyuan97/chat-core'
 
 const attachments = useAttachments({
   accept: 'image/*,application/pdf,.md',
@@ -252,7 +252,7 @@ const voice = useVoiceInput({
 传 `models` 就多一个选择器，不传就没有：
 
 ```tsx
-import type { ChatModel } from '@xinjiyuan97/core'
+import type { ChatModel } from '@xinjiyuan97/chat-core'
 
 const models: ChatModel[] = [
   { id: 'fast', name: '快速模型', description: '日常问答', badge: '默认' },
@@ -365,7 +365,7 @@ const [quote, setQuote] = useState<QuotedMessage | null>(null)
 一个 agent 下面挂多个会话是常态。给侧边栏传 `agents`，列表就切成可折叠的分区：
 
 ```tsx
-import type { Agent } from '@xinjiyuan97/core'
+import type { Agent } from '@xinjiyuan97/chat-core'
 
 const agents: Agent[] = [
   { id: 'coder', name: '代码助手', description: '读仓库、改代码、跑测试', avatar: '⌘' },
@@ -443,7 +443,7 @@ createOpenAITransport({
 Agent 输出一段 JSON spec，渲染成可交互组件，用户操作再作为 action 回传：
 
 ```tsx
-import { defaultA2UIRegistry } from '@xinjiyuan97/ui/a2ui-registry'
+import { defaultA2UIRegistry } from '@xinjiyuan97/chat-ui/a2ui-registry'
 
 <ChatThemeProvider
   a2uiRegistry={{ ...defaultA2UIRegistry, Chart: MyChart }}

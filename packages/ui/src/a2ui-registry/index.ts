@@ -1,5 +1,5 @@
 /**
- * @xinjiyuan97/ui/a2ui-registry — the default A2UI component set.
+ * @xinjiyuan97/chat-ui/a2ui-registry — the default A2UI component set.
  *
  * These are the components an agent can name in a spec. Keep the surface small and
  * boring: every entry here is a capability you are handing to model output, so a
@@ -12,7 +12,7 @@
  * Lookup is case-insensitive, so a spec saying `button`, `Button` or `BUTTON` all resolve.
  */
 
-import type { A2UIRegistry } from '@xinjiyuan97/a2ui'
+import type { A2UIRegistry } from '@xinjiyuan97/chat-a2ui'
 
 import { Card, Column, Divider, Field, Form, Row, Spacer } from './layout'
 import {

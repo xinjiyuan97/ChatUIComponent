@@ -74,13 +74,13 @@ importers:
 
   apps/docs:
     dependencies:
-      '@xinjiyuan97/a2ui':
+      '@xinjiyuan97/chat-a2ui':
         specifier: workspace:*
         version: link:../../packages/a2ui
-      '@xinjiyuan97/core':
+      '@xinjiyuan97/chat-core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@xinjiyuan97/ui':
+      '@xinjiyuan97/chat-ui':
         specifier: workspace:*
         version: link:../../packages/ui
       react:
@@ -123,13 +123,13 @@ importers:
 
   examples/next-app:
     dependencies:
-      '@xinjiyuan97/a2ui':
+      '@xinjiyuan97/chat-a2ui':
         specifier: workspace:*
         version: link:../../packages/a2ui
-      '@xinjiyuan97/core':
+      '@xinjiyuan97/chat-core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@xinjiyuan97/ui':
+      '@xinjiyuan97/chat-ui':
         specifier: workspace:*
         version: link:../../packages/ui
       next:
@@ -163,7 +163,7 @@ importers:
 
   packages/a2ui:
     dependencies:
-      '@xinjiyuan97/core':
+      '@xinjiyuan97/chat-core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -183,10 +183,10 @@ importers:
 
   packages/ui:
     dependencies:
-      '@xinjiyuan97/a2ui':
+      '@xinjiyuan97/chat-a2ui':
         specifier: workspace:*
         version: link:../a2ui
-      '@xinjiyuan97/core':
+      '@xinjiyuan97/chat-core':
         specifier: workspace:*
         version: link:../core
       clsx:

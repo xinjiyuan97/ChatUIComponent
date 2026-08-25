@@ -4,12 +4,12 @@
  * instead of arriving as a second, duplicate stylesheet.
  *
  * If you don't use Tailwind, delete both `@import`s below and use the pre-compiled sheet:
- *   import '@xinjiyuan97/ui/style.css'
+ *   import '@xinjiyuan97/chat-ui/style.css'
  */
 @import 'tailwindcss';
-@import '@xinjiyuan97/ui/tokens.css';
+@import '@xinjiyuan97/chat-ui/tokens.css';
 
-@source '../node_modules/@xinjiyuan97/ui/dist';
+@source '../node_modules/@xinjiyuan97/chat-ui/dist';
 
 html,
 body {

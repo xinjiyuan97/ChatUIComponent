@@ -1,6 +1,6 @@
 ---
-'@xinjiyuan97/core': minor
-'@xinjiyuan97/ui': minor
+'@xinjiyuan97/chat-core': minor
+'@xinjiyuan97/chat-ui': minor
 ---
 
 模型选择、Mermaid 图表、可运行代码块

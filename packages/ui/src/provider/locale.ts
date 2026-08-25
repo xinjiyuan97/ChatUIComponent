@@ -1,4 +1,4 @@
-import type { ConversationGroupKey } from '@xinjiyuan97/core'
+import type { ConversationGroupKey } from '@xinjiyuan97/chat-core'
 
 export type ChatLocale = {
   /** BCP-47 tag, used for `Intl` formatting. */

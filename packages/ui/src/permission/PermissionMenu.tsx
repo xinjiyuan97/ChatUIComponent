@@ -6,7 +6,7 @@ import {
   type PermissionOption,
   type PermissionRequest,
   type PermissionResolution,
-} from '@xinjiyuan97/core'
+} from '@xinjiyuan97/chat-core'
 import { useEffect, useRef } from 'react'
 
 import { cn } from '../lib/cn'

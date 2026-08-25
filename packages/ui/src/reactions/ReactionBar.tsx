@@ -1,6 +1,6 @@
 'use client'
 
-import type { Reaction } from '@xinjiyuan97/core'
+import type { Reaction } from '@xinjiyuan97/chat-core'
 import { useState } from 'react'
 
 import { cn } from '../lib/cn'

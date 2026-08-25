@@ -1,11 +1,11 @@
-# @xinjiyuan97/core
+# @xinjiyuan97/chat-core
 
 Agent 聊天界面的**无 UI 内核**：类型、store、transport、hooks。不含任何组件、样式或 CSS —— 想接自己的设计系统，只装这一个包就够了。
 
-配套的组件在 [`@xinjiyuan97/ui`](../ui)，完整文档在[仓库根 README](../../README.md)。
+配套的组件在 [`@xinjiyuan97/chat-ui`](../ui)，完整文档在[仓库根 README](../../README.md)。
 
 ```bash
-pnpm add @xinjiyuan97/core
+pnpm add @xinjiyuan97/chat-core
 ```
 
 Peer：React 18.2+ 或 19。

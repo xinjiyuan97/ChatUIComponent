@@ -7,7 +7,7 @@ import {
   Markdown,
   TypingText,
   completeMarkdown,
-} from '@xinjiyuan97/ui'
+} from '@xinjiyuan97/chat-ui'
 
 import {
   MARKDOWN_CALLOUTS,
@@ -152,7 +152,7 @@ export async function getToken(): Promise<Token> {
       />
       <CodeBlock
         language="bash"
-        code={`pnpm add @xinjiyuan97/ui @xinjiyuan97/core
+        code={`pnpm add @xinjiyuan97/chat-ui @xinjiyuan97/chat-core
 pnpm add -D tailwindcss@next`}
       />
       <CodeBlock

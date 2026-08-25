@@ -1,6 +1,6 @@
 ---
-'@xinjiyuan97/core': minor
-'@xinjiyuan97/ui': minor
+'@xinjiyuan97/chat-core': minor
+'@xinjiyuan97/chat-ui': minor
 ---
 
 引用：引用块 / 提示框、行内角标、引用回复

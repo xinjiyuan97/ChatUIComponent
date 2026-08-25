@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react'
 
-import type { ChatMessage, ToolPart } from '@xinjiyuan97/core'
+import type { ChatMessage, ToolPart } from '@xinjiyuan97/chat-core'
 import {
   ErrorPart,
   FilePart,
@@ -8,7 +8,7 @@ import {
   ReasoningPart,
   SourcesPart,
   ToolCallPart,
-} from '@xinjiyuan97/ui'
+} from '@xinjiyuan97/chat-ui'
 
 import { NOW } from '../fixtures'
 

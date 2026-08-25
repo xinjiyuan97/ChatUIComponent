@@ -7,7 +7,7 @@ import {
   type AgentSection,
   type Conversation,
   type ConversationGroupKey,
-} from '@xinjiyuan97/core'
+} from '@xinjiyuan97/chat-core'
 import {
   useCallback,
   useEffect,

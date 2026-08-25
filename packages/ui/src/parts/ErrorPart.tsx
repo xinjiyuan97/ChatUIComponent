@@ -1,6 +1,6 @@
 'use client'
 
-import type { ErrorPart as ErrorPartData } from '@xinjiyuan97/core'
+import type { ErrorPart as ErrorPartData } from '@xinjiyuan97/chat-core'
 
 import { cn } from '../lib/cn'
 import { AlertIcon, RegenerateIcon } from '../icons'

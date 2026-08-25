@@ -1,6 +1,6 @@
 'use client'
 
-import type { ChatMessage, ToolPart as ToolPartData, ToolState } from '@xinjiyuan97/core'
+import type { ChatMessage, ToolPart as ToolPartData, ToolState } from '@xinjiyuan97/chat-core'
 import { useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'

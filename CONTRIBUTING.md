@@ -14,8 +14,8 @@ pnpm lint
 
 ## 发布 npm 包
 
-仓库使用 Changesets 和 GitHub Actions 发布 `@xinjiyuan97/core`、`@xinjiyuan97/a2ui`、
-`@xinjiyuan97/ui`。首次启用需要在 GitHub 仓库完成两项设置：
+仓库使用 Changesets 和 GitHub Actions 发布 `@xinjiyuan97/chat-core`、`@xinjiyuan97/chat-a2ui`、
+`@xinjiyuan97/chat-ui`。首次启用需要在 GitHub 仓库完成两项设置：
 
 1. 在 **Settings → Secrets and variables → Actions** 新建 repository secret：
    `NPM_TOKEN`。值为拥有 `@agent-chat` npm scope 发布权限的 npm access token。
@@ -47,7 +47,7 @@ pnpm lint
 ## 代码约定
 
 - **只用 token，不写字面量颜色。** 新配色先加进 `packages/ui/src/styles/tokens.css`。oklch 的写法是保持 C/H、只挪 L 来派生暗色 —— 这样不会出现色相漂移。
-- **headless 在 core，皮在 ui。** 状态机、时序、边界情况都放 `@xinjiyuan97/core` 的 hook 里；`packages/ui` 里的组件应该薄到可以整个换掉。判断标准：如果一段逻辑在别人的设计系统里也需要，它就不该待在 ui。
+- **headless 在 core，皮在 ui。** 状态机、时序、边界情况都放 `@xinjiyuan97/chat-core` 的 hook 里；`packages/ui` 里的组件应该薄到可以整个换掉。判断标准：如果一段逻辑在别人的设计系统里也需要，它就不该待在 ui。
 - `verbatimModuleSyntax` + `jsx: react-jsx` 意味着 **`React` 这个命名空间不在作用域里**。`React.ReactNode` 会直接编译失败，要写 `import { type ReactNode } from 'react'`。
 - 组件要能在 Next.js App Router 下用：产物顶部有 `"use client"`，所以 **tsup 里不要开 `treeshake`** —— Rollup 那一趟会把 banner 里的指令当成「模块级指令」丢掉。
 

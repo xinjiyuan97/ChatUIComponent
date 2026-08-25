@@ -1,6 +1,6 @@
 'use client'
 
-import type { ChatMessage, MessagePart, SourcePart } from '@xinjiyuan97/core'
+import type { ChatMessage, MessagePart, SourcePart } from '@xinjiyuan97/chat-core'
 import { useRef, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'

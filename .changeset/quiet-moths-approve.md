@@ -1,6 +1,6 @@
 ---
-'@xinjiyuan97/core': minor
-'@xinjiyuan97/ui': minor
+'@xinjiyuan97/chat-core': minor
+'@xinjiyuan97/chat-ui': minor
 ---
 
 新增权限审批菜单与任务清单两个 part
