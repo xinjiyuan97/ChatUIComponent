@@ -1,6 +1,6 @@
 'use client'
 
-import { useTodoProgress, type TodoItem, type TodoStatus } from '@agent-chat/core'
+import { useTodoProgress, type TodoItem, type TodoStatus } from '@xinjiyuan97/core'
 import { useEffect, useRef, useState } from 'react'
 
 import { cn } from '../lib/cn'

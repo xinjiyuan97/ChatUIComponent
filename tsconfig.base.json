@@ -30,8 +30,8 @@
      * Bundling is unaffected: tsup resolves workspace packages through node_modules. */
     "baseUrl": ".",
     "paths": {
-      "@agent-chat/core": ["./packages/core/src/index.ts"],
-      "@agent-chat/a2ui": ["./packages/a2ui/src/index.ts"]
+      "@xinjiyuan97/core": ["./packages/core/src/index.ts"],
+      "@xinjiyuan97/a2ui": ["./packages/a2ui/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "dist", "storybook-static"]

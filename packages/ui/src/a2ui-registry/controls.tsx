@@ -1,6 +1,6 @@
 'use client'
 
-import type { A2UIComponentProps, A2UIContext } from '@agent-chat/a2ui'
+import type { A2UIComponentProps, A2UIContext } from '@xinjiyuan97/a2ui'
 import { useId, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'

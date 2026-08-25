@@ -5,10 +5,10 @@
      * with it, since the inherited one points at the repo root. */
     "baseUrl": ".",
     "paths": {
-      "@agent-chat/core": ["../../packages/core/src/index.ts"],
-      "@agent-chat/a2ui": ["../../packages/a2ui/src/index.ts"],
-      "@agent-chat/ui": ["../../packages/ui/src/index.ts"],
-      "@agent-chat/ui/a2ui-registry": ["../../packages/ui/src/a2ui-registry/index.ts"]
+      "@xinjiyuan97/core": ["../../packages/core/src/index.ts"],
+      "@xinjiyuan97/a2ui": ["../../packages/a2ui/src/index.ts"],
+      "@xinjiyuan97/ui": ["../../packages/ui/src/index.ts"],
+      "@xinjiyuan97/ui/a2ui-registry": ["../../packages/ui/src/a2ui-registry/index.ts"]
     }
   },
   "include": ["src", ".storybook"]

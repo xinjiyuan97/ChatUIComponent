@@ -1,6 +1,6 @@
 'use client'
 
-import type { VoiceController } from '@agent-chat/core'
+import type { VoiceController } from '@xinjiyuan97/core'
 
 import { cn } from '../lib/cn'
 import { CloseIcon, MicIcon, SpinnerIcon } from '../icons'

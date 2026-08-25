@@ -1,13 +1,13 @@
 /**
- * @agent-chat/ui — styled components.
+ * @xinjiyuan97/ui — styled components.
  *
- * Everything here is a thin skin over the headless hooks in `@agent-chat/core`. If a
+ * Everything here is a thin skin over the headless hooks in `@xinjiyuan97/core`. If a
  * component's look doesn't fit your product, drop it and keep the hook: the state
  * machines live in core, not in these files.
  *
  * Styles are not imported here. Bring your own:
- *   - Tailwind v4 projects: `@import '@agent-chat/ui/tokens.css'`
- *   - everyone else:        `import '@agent-chat/ui/style.css'`
+ *   - Tailwind v4 projects: `@import '@xinjiyuan97/ui/tokens.css'`
+ *   - everyone else:        `import '@xinjiyuan97/ui/style.css'`
  */
 
 export * from './lib/cn'

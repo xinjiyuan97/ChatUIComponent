@@ -1,4 +1,4 @@
-import type { A2UINode, ChatEvent } from '@agent-chat/core'
+import type { A2UINode, ChatEvent } from '@xinjiyuan97/core'
 
 export const runtime = 'nodejs'
 /* Nothing here is cacheable — it's a stream. */

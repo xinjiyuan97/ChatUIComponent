@@ -1,6 +1,6 @@
 'use client'
 
-import { useSmoothText } from '@agent-chat/core'
+import { useSmoothText } from '@xinjiyuan97/core'
 import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'

@@ -1,7 +1,7 @@
 'use client'
 
-import type { ChatMessage, A2UIPart as A2UIPartData } from '@agent-chat/core'
-import { A2UIRenderer, type A2UINode } from '@agent-chat/a2ui'
+import type { ChatMessage, A2UIPart as A2UIPartData } from '@xinjiyuan97/core'
+import { A2UIRenderer, type A2UINode } from '@xinjiyuan97/a2ui'
 
 import { cn } from '../lib/cn'
 import { AlertIcon } from '../icons'

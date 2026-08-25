@@ -1,6 +1,6 @@
 'use client'
 
-import type { Conversation } from '@agent-chat/core'
+import type { Conversation } from '@xinjiyuan97/core'
 import {
   useEffect,
   useRef,

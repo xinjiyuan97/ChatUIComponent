@@ -5,7 +5,7 @@ import {
   useCopyToClipboard,
   type ChatMessage,
   type QuotedMessage,
-} from '@agent-chat/core'
+} from '@xinjiyuan97/core'
 
 import { cn } from '../lib/cn'
 import {

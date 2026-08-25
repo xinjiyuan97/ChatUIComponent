@@ -1,5 +1,5 @@
 {
-  "name": "@agent-chat/a2ui",
+  "name": "@xinjiyuan97/a2ui",
   "version": "0.1.0",
   "description": "Render agent-authored declarative UI specs into React components.",
   "license": "MIT",
@@ -44,7 +44,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@agent-chat/core": "workspace:*"
+    "@xinjiyuan97/core": "workspace:*"
   },
   "peerDependencies": {
     "react": "^18.2.0 || ^19.0.0"

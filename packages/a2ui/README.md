@@ -1,21 +1,21 @@
-# @agent-chat/a2ui
+# @xinjiyuan97/a2ui
 
-把 agent 写出来的一段 **JSON spec** 渲染成 React 组件，用户的操作再作为 action 回传。渲染器本身不带任何组件 —— 组件由你注册，默认组件集在 [`@agent-chat/ui/a2ui-registry`](../ui)。
+把 agent 写出来的一段 **JSON spec** 渲染成 React 组件，用户的操作再作为 action 回传。渲染器本身不带任何组件 —— 组件由你注册，默认组件集在 [`@xinjiyuan97/ui/a2ui-registry`](../ui)。
 
 完整文档在[仓库根 README](../../README.md)。
 
 ```bash
-pnpm add @agent-chat/a2ui
+pnpm add @xinjiyuan97/a2ui
 ```
 
-Peer：React 18.2+ 或 19。依赖 `@agent-chat/core`（只用它的类型）。
+Peer：React 18.2+ 或 19。依赖 `@xinjiyuan97/core`（只用它的类型）。
 
 ---
 
 ## 用法
 
 ```tsx
-import { A2UIRenderer, type A2UIComponentProps } from '@agent-chat/a2ui'
+import { A2UIRenderer, type A2UIComponentProps } from '@xinjiyuan97/a2ui'
 
 const registry = {
   Card: ({ children }: A2UIComponentProps) => <div className="card">{children}</div>,

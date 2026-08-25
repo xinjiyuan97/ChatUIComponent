@@ -1,4 +1,4 @@
-import type { ConversationGroupKey } from '@agent-chat/core'
+import type { ConversationGroupKey } from '@xinjiyuan97/core'
 
 export type ChatLocale = {
   /** BCP-47 tag, used for `Intl` formatting. */

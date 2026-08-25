@@ -23,7 +23,7 @@ export type ToolState =
   | 'output-error'
 
 /**
- * A declarative UI node emitted by an agent. Kept in core (rather than in `@agent-chat/a2ui`)
+ * A declarative UI node emitted by an agent. Kept in core (rather than in `@xinjiyuan97/a2ui`)
  * so the message model has no dependency on the renderer — it is plain data.
  */
 export type A2UINode = {

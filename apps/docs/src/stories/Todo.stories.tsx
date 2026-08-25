@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import type { Meta, StoryObj } from '@storybook/react'
 
-import type { TodoItem } from '@agent-chat/core'
-import { TodoList } from '@agent-chat/ui'
+import type { TodoItem } from '@xinjiyuan97/core'
+import { TodoList } from '@xinjiyuan97/ui'
 
 const meta = {
   title: 'Chat/Todo',

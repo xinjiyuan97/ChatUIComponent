@@ -1,5 +1,5 @@
 ---
-'@agent-chat/ui': patch
+'@xinjiyuan97/ui': patch
 ---
 
 修复流式代码块与 Mermaid 图的「最后一帧」丢失

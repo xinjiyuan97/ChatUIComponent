@@ -12,7 +12,7 @@ export default defineConfig({
   /* No `treeshake`: tsup's Rollup pass strips the `"use client"` banner below. */
   /* `mermaid` is an optional peer: listing it here keeps the dynamic import in the output
    * as an import, so a consumer who never installs it never resolves it either. */
-  external: ['react', 'react-dom', 'mermaid', '@agent-chat/core', '@agent-chat/a2ui'],
+  external: ['react', 'react-dom', 'mermaid', '@xinjiyuan97/core', '@xinjiyuan97/a2ui'],
   // Everything renders interactively; marking the whole bundle keeps Next.js App Router
   // consumers from having to wrap each import themselves.
   banner: { js: '"use client";' },

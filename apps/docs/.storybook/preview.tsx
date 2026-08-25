@@ -1,8 +1,8 @@
 import { useEffect, type ReactNode } from 'react'
 import type { Decorator, Preview } from '@storybook/react'
 
-import { ChatThemeProvider } from '@agent-chat/ui'
-import { defaultA2UIRegistry } from '@agent-chat/ui/a2ui-registry'
+import { ChatThemeProvider } from '@xinjiyuan97/ui'
+import { defaultA2UIRegistry } from '@xinjiyuan97/ui/a2ui-registry'
 
 import '../src/styles.css'
 

@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import type { Meta, StoryObj } from '@storybook/react'
 
-import type { PermissionOption, PermissionRequest, PermissionResolution } from '@agent-chat/core'
-import { PermissionMenu } from '@agent-chat/ui'
+import type { PermissionOption, PermissionRequest, PermissionResolution } from '@xinjiyuan97/core'
+import { PermissionMenu } from '@xinjiyuan97/ui'
 
 const meta = {
   title: 'Chat/Permission',

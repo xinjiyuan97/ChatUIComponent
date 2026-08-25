@@ -1,6 +1,6 @@
 'use client'
 
-import type { ChatMessage, MessagePart, QuotedMessage, Reaction } from '@agent-chat/core'
+import type { ChatMessage, MessagePart, QuotedMessage, Reaction } from '@xinjiyuan97/core'
 import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'

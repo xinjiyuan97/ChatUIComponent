@@ -1,6 +1,6 @@
 'use client'
 
-import type { Agent } from '@agent-chat/core'
+import type { Agent } from '@xinjiyuan97/core'
 import type { MouseEvent as ReactMouseEvent } from 'react'
 
 import { cn } from '../lib/cn'

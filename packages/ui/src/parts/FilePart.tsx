@@ -1,6 +1,6 @@
 'use client'
 
-import type { FilePart as FilePartData } from '@agent-chat/core'
+import type { FilePart as FilePartData } from '@xinjiyuan97/core'
 
 import { cn } from '../lib/cn'
 import { formatBytes } from '../lib/format'

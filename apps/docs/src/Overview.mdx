@@ -13,9 +13,9 @@ import { Meta } from '@storybook/blocks'
 
 | 包                 | 作用                                                                       |
 | ------------------ | -------------------------------------------------------------------------- |
-| `@agent-chat/core` | 零 UI。消息模型、事件流、store、transport、hooks。React 之外不依赖任何东西 |
-| `@agent-chat/a2ui` | JSON → UI 的协议、渲染器和安全边界                                         |
-| `@agent-chat/ui`   | 全部视觉组件、design token、以及 `@agent-chat/ui/a2ui-registry` 默认组件集 |
+| `@xinjiyuan97/core` | 零 UI。消息模型、事件流、store、transport、hooks。React 之外不依赖任何东西 |
+| `@xinjiyuan97/a2ui` | JSON → UI 的协议、渲染器和安全边界                                         |
+| `@xinjiyuan97/ui`   | 全部视觉组件、design token、以及 `@xinjiyuan97/ui/a2ui-registry` 默认组件集 |
 
 依赖是单向的：`a2ui → core`，`ui → core + a2ui`。只想要状态管理、自己写皮的话，装 `core` 就够。
 
@@ -41,7 +41,7 @@ import { Meta } from '@storybook/blocks'
 ## 最小用法
 
 ```tsx
-import { createSSETransport, useChat } from '@agent-chat/core'
+import { createSSETransport, useChat } from '@xinjiyuan97/core'
 import {
   ChatContainer,
   ChatMessageList,
@@ -49,7 +49,7 @@ import {
   ChatViewport,
   Message,
   PromptInput,
-} from '@agent-chat/ui'
+} from '@xinjiyuan97/ui'
 
 const transport = createSSETransport({ url: '/api/chat' })
 

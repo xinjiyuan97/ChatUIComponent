@@ -5,8 +5,8 @@ import type {
   ChatModel,
   Conversation,
   MockStep,
-} from '@agent-chat/core'
-import { mockA2UI, mockReasoning, mockText, mockTool, mockTurn } from '@agent-chat/core'
+} from '@xinjiyuan97/core'
+import { mockA2UI, mockReasoning, mockText, mockTool, mockTurn } from '@xinjiyuan97/core'
 
 /* A fixed clock. Stories that render relative timestamps ("2 hours ago") would otherwise
  * produce a different DOM on every run, which makes visual diffs useless. */

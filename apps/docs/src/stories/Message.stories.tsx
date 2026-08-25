@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react'
 
-import type { ChatMessage } from '@agent-chat/core'
-import { ChatMessageList, Message } from '@agent-chat/ui'
+import type { ChatMessage } from '@xinjiyuan97/core'
+import { ChatMessageList, Message } from '@xinjiyuan97/ui'
 
 import {
   ASSISTANT_CITED,

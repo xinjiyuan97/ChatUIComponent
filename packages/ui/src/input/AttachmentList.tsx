@@ -1,6 +1,6 @@
 'use client'
 
-import type { Attachment } from '@agent-chat/core'
+import type { Attachment } from '@xinjiyuan97/core'
 
 import { cn } from '../lib/cn'
 import { formatBytes } from '../lib/format'

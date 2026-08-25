@@ -6,7 +6,7 @@ import {
   type Attachment,
   type ChatMessage,
   type QuotedMessage,
-} from '@agent-chat/core'
+} from '@xinjiyuan97/core'
 import {
   AttachmentList,
   ChatMessageList,
@@ -15,7 +15,7 @@ import {
   PromptInput,
   QuotePreview,
   SuggestionChips,
-} from '@agent-chat/ui'
+} from '@xinjiyuan97/ui'
 
 import { MODELS, NOW } from '../fixtures'
 import { useMockVoice } from '../mock-voice'

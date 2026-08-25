@@ -1,6 +1,6 @@
 'use client'
 
-import { useCopyToClipboard } from '@agent-chat/core'
+import { useCopyToClipboard } from '@xinjiyuan97/core'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
 
 import { cn } from '../lib/cn'

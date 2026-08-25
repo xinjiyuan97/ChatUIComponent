@@ -1,4 +1,4 @@
-import type { CodeRunResult } from '@agent-chat/ui'
+import type { CodeRunResult } from '@xinjiyuan97/ui'
 
 /**
  * A fake code runner for the stories.

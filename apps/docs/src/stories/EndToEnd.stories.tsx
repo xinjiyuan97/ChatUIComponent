@@ -1,9 +1,9 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import type { Meta, StoryObj } from '@storybook/react'
 
-import type { A2UIAction } from '@agent-chat/a2ui'
-import type { ChatMessage } from '@agent-chat/core'
-import { createMockTransport, useAttachments, useChat } from '@agent-chat/core'
+import type { A2UIAction } from '@xinjiyuan97/a2ui'
+import type { ChatMessage } from '@xinjiyuan97/core'
+import { createMockTransport, useAttachments, useChat } from '@xinjiyuan97/core'
 import {
   ChatContainer,
   ChatEmptyState,
@@ -14,7 +14,7 @@ import {
   PromptInput,
   SuggestionChips,
   useChatTheme,
-} from '@agent-chat/ui'
+} from '@xinjiyuan97/ui'
 
 import { FOLLOW_UP, FULL_TURN, MODELS } from '../fixtures'
 import { useMockVoice } from '../mock-voice'
