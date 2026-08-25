@@ -3,14 +3,25 @@
   "version": "0.1.0",
   "description": "Render agent-authored declarative UI specs into React components.",
   "license": "MIT",
-  "keywords": ["a2ui", "generative-ui", "ai", "agent", "llm", "react", "json-ui"],
+  "keywords": [
+    "a2ui",
+    "generative-ui",
+    "ai",
+    "agent",
+    "llm",
+    "react",
+    "json-ui"
+  ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xinjiyuan97/chat-components.git",
+    "url": "git+https://github.com/xinjiyuan97/ChatUIComponent.git",
     "directory": "packages/a2ui"
   },
-  "homepage": "https://github.com/xinjiyuan97/chat-components#readme",
-  "bugs": "https://github.com/xinjiyuan97/chat-components/issues",
+  "homepage": "https://github.com/xinjiyuan97/ChatUIComponent#readme",
+  "bugs": "https://github.com/xinjiyuan97/ChatUIComponent/issues",
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "sideEffects": false,
   "files": [

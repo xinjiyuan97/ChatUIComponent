@@ -16,11 +16,14 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xinjiyuan97/chat-components.git",
+    "url": "git+https://github.com/xinjiyuan97/ChatUIComponent.git",
     "directory": "packages/ui"
   },
-  "homepage": "https://github.com/xinjiyuan97/chat-components#readme",
-  "bugs": "https://github.com/xinjiyuan97/chat-components/issues",
+  "homepage": "https://github.com/xinjiyuan97/ChatUIComponent#readme",
+  "bugs": "https://github.com/xinjiyuan97/ChatUIComponent/issues",
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "sideEffects": [
     "**/*.css"

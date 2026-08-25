@@ -120,7 +120,13 @@ const MAX_QUOTE_LENGTH = 2000
  * people already expect from Slack and Telegram, and it is why the button reads the DOM
  * instead of just passing `message` along.
  */
-export function QuoteButton({ message, author, onQuote, size = 'sm', className }: QuoteButtonProps) {
+export function QuoteButton({
+  message,
+  author,
+  onQuote,
+  size = 'sm',
+  className,
+}: QuoteButtonProps) {
   const locale = useLocale()
 
   return (

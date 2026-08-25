@@ -78,16 +78,16 @@ export function Chat() {
 
 ## 组件一览
 
-| 分组     | 组件                                                                                                    |
-| -------- | ------------------------------------------------------------------------------------------------------- |
+| 分组     | 组件                                                                                                         |
+| -------- | ------------------------------------------------------------------------------------------------------------ |
 | 布局     | `ChatThemeProvider` `ChatContainer` `ChatViewport` `ChatMessageList` `ChatEmptyState` `ScrollToBottomButton` |
-| 消息     | `Message` `MessageContent` `MessageActions` `MessageAvatar` `MessageTimestamp`                            |
-| Part     | `TextPart` `ReasoningPart` `ToolCallPart` `A2UIPart` `FilePart` `SourcesPart` `ErrorPart` `JsonViewer`     |
-| 输入     | `PromptInput` `AttachmentList` `SuggestionChips` `QuotePreview` `ModelSelect` `VoiceButton`               |
-| Markdown | `Markdown` `CodeBlock` `Mermaid` `Blockquote` `Citation`                                                  |
-| 流式     | `TypingText` `StreamingCursor` `ThinkingDots` `LoadingShimmer`                                            |
-| 反馈     | `CopyButton` `RegenerateButton` `EditButton` `QuoteButton` `ShareButton` `FeedbackButtons` `ReactionBar`   |
-| 会话     | `ConversationSidebar` `ConversationList` `ConversationItem` `AgentBadge` `AgentSectionHeader`             |
+| 消息     | `Message` `MessageContent` `MessageActions` `MessageAvatar` `MessageTimestamp`                               |
+| Part     | `TextPart` `ReasoningPart` `ToolCallPart` `A2UIPart` `FilePart` `SourcesPart` `ErrorPart` `JsonViewer`       |
+| 输入     | `PromptInput` `AttachmentList` `SuggestionChips` `QuotePreview` `ModelSelect` `VoiceButton`                  |
+| Markdown | `Markdown` `CodeBlock` `Mermaid` `Blockquote` `Citation`                                                     |
+| 流式     | `TypingText` `StreamingCursor` `ThinkingDots` `LoadingShimmer`                                               |
+| 反馈     | `CopyButton` `RegenerateButton` `EditButton` `QuoteButton` `ShareButton` `FeedbackButtons` `ReactionBar`     |
+| 会话     | `ConversationSidebar` `ConversationList` `ConversationItem` `AgentBadge` `AgentSectionHeader`                |
 
 `ChatThemeProvider` 上挂的是全局开关：`locale`（内置 `zh-CN` / `en-US`，也可传自定义 `ChatLocale`）、`density`、`toolRenderers`、`a2uiRegistry`、`onRunCode`、`mermaid`、`typewriter`、`codeThemes`。
 

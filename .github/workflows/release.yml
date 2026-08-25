@@ -30,12 +30,18 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # Never version or publish a revision that has not passed the package checks.
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm build
+
       # Opens (or updates) a "Version Packages" PR while changesets are pending; once that PR
       # is merged there are none left, so this step runs `publish` instead.
       - uses: changesets/action@v1
         with:
           version: pnpm changeset version
-          publish: pnpm release
+          publish: pnpm changeset publish
           commit: 'chore: version packages'
           title: 'chore: version packages'
         env:

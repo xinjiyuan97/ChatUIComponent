@@ -3,14 +3,25 @@
   "version": "0.1.0",
   "description": "Headless state, streaming transports and hooks for agent chat UIs.",
   "license": "MIT",
-  "keywords": ["chat", "ai", "agent", "llm", "streaming", "react", "headless"],
+  "keywords": [
+    "chat",
+    "ai",
+    "agent",
+    "llm",
+    "streaming",
+    "react",
+    "headless"
+  ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xinjiyuan97/chat-components.git",
+    "url": "git+https://github.com/xinjiyuan97/ChatUIComponent.git",
     "directory": "packages/core"
   },
-  "homepage": "https://github.com/xinjiyuan97/chat-components#readme",
-  "bugs": "https://github.com/xinjiyuan97/chat-components/issues",
+  "homepage": "https://github.com/xinjiyuan97/ChatUIComponent#readme",
+  "bugs": "https://github.com/xinjiyuan97/ChatUIComponent/issues",
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "sideEffects": false,
   "files": [

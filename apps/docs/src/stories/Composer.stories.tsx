@@ -260,8 +260,8 @@ export const WithQuote: Story = {
         <div className="flex flex-col gap-4">
           <Hint>
             在下面这条回复里选中一两句话，然后点操作栏里的引号按钮 ——
-            被选中的那段会带到输入框上方。什么都没选就点，引用的是整条消息。 条子上的 × 或者输入框里按
-            Esc 都能取消；发送后自动清空。
+            被选中的那段会带到输入框上方。什么都没选就点，引用的是整条消息。 条子上的 ×
+            或者输入框里按 Esc 都能取消；发送后自动清空。
           </Hint>
 
           <ChatMessageList>

@@ -20,7 +20,14 @@ Peer：React 18.2+ 或 19。
 type MessagePart =
   | { type: 'text'; text: string }
   | { type: 'reasoning'; text: string; durationMs?: number }
-  | { type: 'tool'; toolCallId: string; name: string; state: ToolState; input?: unknown; output?: unknown }
+  | {
+      type: 'tool'
+      toolCallId: string
+      name: string
+      state: ToolState
+      input?: unknown
+      output?: unknown
+    }
   | { type: 'a2ui'; surfaceId: string; spec: A2UINode; resolved?: boolean }
   | { type: 'file' | 'source' | 'error' | 'custom' /* … */ }
 ```
@@ -50,9 +57,9 @@ chat.store // zustand store，给需要在 React 之外读写的场景
 
 后端格式的差异全部收敛在这一层，归一到同一套 `ChatEvent`，所以换后端不动 UI：
 
-| 工厂函数                   | 用途                                                                       |
-| -------------------------- | -------------------------------------------------------------------------- |
-| `createSSETransport`       | 后端直接吐本库的事件格式                                                   |
+| 工厂函数                   | 用途                                                                        |
+| -------------------------- | --------------------------------------------------------------------------- |
+| `createSSETransport`       | 后端直接吐本库的事件格式                                                    |
 | `createOpenAITransport`    | 后端转发 OpenAI `chat.completions` 流（含 DeepSeek 的 `reasoning_content`） |
 | `createAnthropicTransport` | 后端转发 Anthropic Messages 流（含 `thinking_delta`）                       |
 | `createMockTransport`      | 按脚本定时吐事件，Storybook 和单测都用它                                    |
@@ -75,18 +82,18 @@ createSSETransport({ url: '/api/chat' }) // ✅ 指向自己的服务端
 
 ## Hooks
 
-| Hook                    | 用途                                                                  |
-| ----------------------- | --------------------------------------------------------------------- |
-| `useChat`               | 消息状态 + 流式收敛，上面那套                                         |
-| `useSmoothText`         | 打字机效果：按帧匀速吐字，抹平网络的忽快忽慢                          |
-| `useStickToBottom`      | 贴底滚动，用户一往上翻就松手                                          |
-| `useConversationList`   | 会话按日期分组（今天 / 昨天 / 本周 / 更早）                           |
+| Hook                    | 用途                                                                       |
+| ----------------------- | -------------------------------------------------------------------------- |
+| `useChat`               | 消息状态 + 流式收敛，上面那套                                              |
+| `useSmoothText`         | 打字机效果：按帧匀速吐字，抹平网络的忽快忽慢                               |
+| `useStickToBottom`      | 贴底滚动，用户一往上翻就松手                                               |
+| `useConversationList`   | 会话按日期分组（今天 / 昨天 / 本周 / 更早）                                |
 | `useAgentConversations` | 会话按 agent 分区，含全局搜索；纯函数 `groupConversationsByAgent` 同时导出 |
-| `useAttachments`        | 附件：选择 / 拖入 / 粘贴，限额校验，可挂上传钩子                      |
-| `useVoiceInput`         | 语音输入，见下                                                        |
-| `useReactions`          | reaction 的受控 / 非受控切换                                          |
-| `useCopyToClipboard`    | 复制 + 一次性的「已复制」状态                                         |
-| `useAutoResizeTextarea` | 输入框跟着内容长高，到上限转滚动                                      |
+| `useAttachments`        | 附件：选择 / 拖入 / 粘贴，限额校验，可挂上传钩子                           |
+| `useVoiceInput`         | 语音输入，见下                                                             |
+| `useReactions`          | reaction 的受控 / 非受控切换                                               |
+| `useCopyToClipboard`    | 复制 + 一次性的「已复制」状态                                              |
+| `useAutoResizeTextarea` | 输入框跟着内容长高，到上限转滚动                                           |
 
 ### ⚠️ 浏览器原生语音识别不是本地识别
 

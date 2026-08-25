@@ -48,7 +48,8 @@ export async function mockRunCode(
     return {
       status: 'ok',
       durationMs,
-      output: ' id | status  | count \n----+---------+-------\n  1 | ok      |  1284 \n  2 | expired |    17 \n(2 rows)',
+      output:
+        ' id | status  | count \n----+---------+-------\n  1 | ok      |  1284 \n  2 | expired |    17 \n(2 rows)',
     }
   }
 
