@@ -1,5 +1,110 @@
 # @xinjiyuan97/chat-ui
 
+## 0.3.0
+
+### Minor Changes
+
+- 46a2a02: `activeIndicator` on the sidebar, for hiding the active row's accent bar.
+
+  `activeIndicator="none"` on `ConversationSidebar`, `ConversationList`, `ConversationGroup`
+  or `ConversationItem` drops the 2px accent bar to the left of the selected conversation,
+  keeping the tinted fill and the darkened title. Nothing is lost by turning it off — the
+  fill already says which conversation is open — and products whose rail carries a leading
+  avatar or status dot read a second element on that same edge as clutter rather than as
+  emphasis.
+
+  Defaults to `bar`, so existing sidebars are unchanged.
+
+- 46a2a02: Tool registry, generated-image lifecycle, silent reasoning, and inline-code wrapping.
+
+  **`tools` registry on `ChatThemeProvider`.** Per-tool presentation without reimplementing
+  the row: `label`, `icon`, `runningIcon`, `runningMotion`, `tone`, `compact`, `summary`,
+  `renderBody`, or `render` for a full takeover. `defineTool()` pins the type at the
+  declaration site. `toolRenderers` still works and is folded into the same registry; it is
+  now deprecated in favour of `tools: { name: { render } }`.
+
+  **Compact tool calls.** `toolVariant="compact"` on the provider, `compact` on a tool
+  definition, or `variant="compact"` on `ToolCallPart` renders one log-style line with no
+  card and no disclosure — the difference between a skimmable list and twenty cards in a
+  tool-heavy turn.
+
+  **Generated media.** `FilePart` gains `id`, `status`, `width`, `height`, `progress` and
+  `error`; a `file` event carrying an `id` already in the message merges into that part
+  instead of appending, so a placeholder becomes the finished file in place. The new
+  `ImagePart` reserves the declared aspect ratio, holds a shimmer until the bitmap actually
+  decodes, and fades it in — no reflow when the image lands. `ImageSkeleton` is exported for
+  hosts that render generated images from their own tool renderer.
+
+  **Reasoning with no text.** Providers that report only that thinking happened now render a
+  one-line receipt instead of vanishing. `ReasoningPart` gains `redacted`, and
+  `reasoning-start` / `reasoning-end` accept the flag from either end of the stream.
+
+  **Inline code and long URLs wrap.** Long paths, identifiers and bare URLs no longer push
+  the message column past its container, and a wrapped inline-code span keeps its background
+  and corners on every line.
+
+  Breaking (types only): `FilePart.url` and the `file` event's `url` are now optional, since
+  a file being generated has no URL yet. Code reading `part.url` under `strictNullChecks`
+  needs a guard.
+
+- 46a2a02: Composer background slot, and a centred layout for new conversations.
+
+  **`background` on `PromptInput`.** A decorative layer painted inside the box, behind the
+  textarea and the toolbar — a watermark, a gradient, a logo. Unlike `header` and `toolbar`
+  it is out of the document flow, so it never changes the composer's height, and it never
+  takes pointer events: clicking it focuses the textarea underneath. `backgroundVisible`
+  defaults to `empty`, fading the layer out as soon as there is anything in the box, because
+  a watermark behind a paragraph the user is still writing is a legibility problem.
+
+  **`PromptBackdrop`** places content in that slot: `placement` (`top-right` by default —
+  the placeholder owns the top left and the toolbar owns the whole bottom row, send button
+  included) and `opacity`, which defaults far fainter than looks right in isolation.
+
+  **`ChatDock`.** Transcript above, composer below, plus a centred first-run state: an empty
+  conversation puts the greeting, the composer and the starter prompts on the centre line,
+  and sending the first message slides the composer down to the bottom while the intro
+  collapses in step. The motion is a `grid-template-rows` `1fr` → `0fr` transition on a
+  trailing spacer row — the same technique `Collapsible` uses, so it animates to a real
+  layout with no measurement and no magic numbers. The collapsed intro is marked `inert`, so
+  starter prompts clipped to zero height stay out of the tab order.
+
+  Opt-in and additive: hosts that want the composer permanently docked keep assembling
+  `ChatContainer` and `ChatViewport` exactly as before.
+
+- 46a2a02: Prompt queue, a clickable streaming status bar, and a heavier send arrow.
+
+  **`usePromptQueue`** (core) holds messages written while the agent is still answering and
+  releases them one at a time once it goes idle. Draining is driven by the promise `onSend`
+  returns rather than by watching a busy flag — `store.send` only resolves after its whole
+  stream finishes, which makes it an exact "previous turn is done" signal. Queued prompts
+  capture their attachments and quote at queue time, so an item sent minutes later still
+  carries the files it was written with.
+
+  **`PromptInput` gains `queue`.** Passing it changes what the composer does mid-stream: the
+  send button stays a send button and queues, and stopping moves to a `StreamingStatus` bar
+  above the box whose whole row is the click target. Send and stop are two intentions and one
+  slot cannot hold both. Omit `queue` and the old behaviour — send button becomes stop button
+  — is untouched.
+
+  **Stop holds the queue** rather than letting it fire the next message immediately.
+  Interrupting a turn only to have the next queued item start half a second later is not an
+  interruption; the queue is held, still visible and still editable, with a resume control
+  next to it.
+
+  **`PromptQueue`** lists the waiting prompts: click one to rewrite it in place, hover for the
+  remove button.
+
+  The send button's arrow goes from 16px/1.5 to 18px/2.25. The icon set's defaults are tuned
+  for glyphs sitting beside text; alone in the middle of a filled 32px circle the same arrow
+  read as a thin scratch.
+
+### Patch Changes
+
+- Updated dependencies [46a2a02]
+- Updated dependencies [46a2a02]
+  - @xinjiyuan97/chat-core@0.3.0
+  - @xinjiyuan97/chat-a2ui@0.3.0
+
 ## 0.2.0
 
 ### Minor Changes
