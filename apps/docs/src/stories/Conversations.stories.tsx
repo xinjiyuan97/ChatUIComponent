@@ -118,6 +118,17 @@ export const Default: Story = {
   render: () => <Workbench initial={CONVERSATIONS} />,
 }
 
+export const NoActiveBar: Story = {
+  name: '选中态 — 不要蓝条',
+  render: () => (
+    <Workbench
+      initial={CONVERSATIONS}
+      activeIndicator="none"
+      note='activeIndicator="none" 去掉选中行左侧那根 2px 强调色竖条，只保留淡底 + 加深的标题色。淡底本身已经足够说明「当前在哪个会话」，所以去掉竖条不会丢信息 —— 对于左侧已经有头像或状态点的产品，同一条边上再放一个元素读起来是杂乱而不是强调。'
+    />
+  ),
+}
+
 export const Collapsed: Story = {
   render: () => (
     <Workbench

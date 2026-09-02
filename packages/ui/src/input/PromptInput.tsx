@@ -4,6 +4,7 @@ import type {
   AttachmentController,
   ChatModel,
   FilePart,
+  PromptQueueController,
   QuotedMessage,
   VoiceController,
 } from '@xinjiyuan97/chat-core'
@@ -25,6 +26,7 @@ import { ArrowUpIcon, ImageIcon, PaperclipIcon, StopIcon, UploadIcon } from '../
 import { useLocale } from '../provider/ChatThemeProvider'
 import { AttachmentList } from './AttachmentList'
 import { ModelSelect } from './ModelSelect'
+import { PromptQueue, StreamingStatus } from './PromptQueue'
 import { QuotePreview } from './QuotePreview'
 import { VoiceButton, VoiceStatus } from './VoiceButton'
 
@@ -55,6 +57,18 @@ export type PromptInputProps = {
   attachments?: AttachmentController
   /** From `useVoiceInput`. Enables the mic button. */
   voice?: VoiceController
+  /**
+   * From `usePromptQueue`. Lets the user keep writing while a reply is still streaming.
+   *
+   * Passing this changes what the composer does mid-stream: the send button stays a send
+   * button and adds to the queue, and stopping moves to a `StreamingStatus` bar above the
+   * box. Those are two different actions and they cannot share one slot — see the comment
+   * on the button below.
+   *
+   * Omitting it leaves the original behaviour untouched: the send button becomes a stop
+   * button while streaming.
+   */
+  queue?: PromptQueueController
   /** Adds a second, image-only picker next to the paperclip. */
   showImageButton?: boolean
   /** Adds a model picker to the toolbar. Omit — or pass `[]` — and no picker renders. */
@@ -75,6 +89,21 @@ export type PromptInputProps = {
   toolbar?: ReactNode
   /** Rendered above the textarea, under the attachment list. */
   header?: ReactNode
+  /**
+   * Decorative layer painted inside the box, behind the textarea and the toolbar.
+   *
+   * Unlike `header` and `toolbar` this is out of the document flow, so it never changes
+   * the composer's height. It also never receives pointer events — clicking a watermark
+   * focuses the textarea underneath it, which is the only behaviour that makes sense.
+   * See `PromptBackdrop` for a ready-made way to place something in here.
+   */
+  background?: ReactNode
+  /**
+   * `empty` (the default) fades the background out as soon as there is anything in the
+   * box. A watermark sitting behind a paragraph the user is still writing is a legibility
+   * problem, not a brand moment.
+   */
+  backgroundVisible?: 'empty' | 'always'
   /** Shows the "Enter to send" hint under the box. */
   showHint?: boolean
   maxRows?: number
@@ -119,6 +148,7 @@ export function PromptInput(props: PromptInputProps) {
     placeholder,
     attachments,
     voice,
+    queue,
     showImageButton = false,
     models,
     model,
@@ -128,6 +158,8 @@ export function PromptInput(props: PromptInputProps) {
     onQuoteRemove,
     toolbar,
     header,
+    background,
+    backgroundVisible = 'empty',
     showHint = true,
     maxRows = 12,
     autoFocus,
@@ -242,19 +274,48 @@ export function PromptInput(props: PromptInputProps) {
   const canSend =
     (value.trim().length > 0 || hasAttachments) && !disabled && !pendingUploads && !dictating
 
+  /* Drives the `background` slot's fade. Deliberately wider than "has text": an
+   * attachment row or a quote strip already fills the box, and a watermark showing through
+   * behind those reads as a rendering bug rather than as decoration. */
+  const composerEmpty = !displayValue && !hasAttachments && !quote
+
+  /* Mid-stream with a queue attached, submitting parks the message instead of sending it.
+   * Without a queue there is nothing to park it in, so submit stays blocked as before. */
+  const queueing = streaming && queue !== undefined
+
   const submit = useCallback(() => {
     const trimmed = value.trim()
     const parts = attachments?.toParts() ?? EMPTY_PARTS
-    if ((!trimmed && parts.length === 0) || disabled || streaming) return
-    if (attachments?.isProcessing) return
+    if (!trimmed && parts.length === 0) return
+    if (disabled || attachments?.isProcessing) return
+    if (streaming && !queue) return
 
-    onSubmit(trimmed, { parts, quote: quote ?? undefined })
+    if (queueing) {
+      // The attachments and the quote are captured here, with this text. Reading them
+      // again when the item finally leaves the queue would staple whatever is in the
+      // composer *then* onto a message written minutes earlier.
+      queue.enqueue(trimmed, { parts, quote: quote ?? undefined })
+    } else {
+      onSubmit(trimmed, { parts, quote: quote ?? undefined })
+    }
+
     setValue('')
     attachments?.clear()
     // The quote belongs to the message that was just sent; leaving the strip up would
     // silently attach it to the next one as well.
     onQuoteRemove?.()
-  }, [attachments, disabled, onQuoteRemove, onSubmit, quote, setValue, streaming, value])
+  }, [
+    attachments,
+    disabled,
+    onQuoteRemove,
+    onSubmit,
+    queue,
+    queueing,
+    quote,
+    setValue,
+    streaming,
+    value,
+  ])
 
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === 'Escape') {
@@ -290,6 +351,23 @@ export function PromptInput(props: PromptInputProps) {
 
   return (
     <div className={cn('w-full', className)}>
+      {/* Above the box, not inside it: these two describe the *previous* turn and the ones
+          still waiting, so putting them in the composer would read as part of the message
+          being written. Only rendered with a queue attached — without one there is nothing
+          to list, and the stop control stays on the send button as it always was. */}
+      {queue && streaming && onStop && (
+        <StreamingStatus
+          onStop={() => {
+            onStop()
+            // Holding is half of what stop means here. Without it the queue notices the
+            // agent went idle and immediately launches the next message, so the user has
+            // to hit stop once per queued item to actually get silence.
+            queue.hold()
+          }}
+        />
+      )}
+      {queue && <PromptQueue queue={queue} />}
+
       <div
         onDragEnter={onDragEnter}
         onDragOver={(event) => {
@@ -303,10 +381,31 @@ export function PromptInput(props: PromptInputProps) {
           // The focus ring goes on the container, not the textarea, so the whole composer
           // reads as one control.
           'focus-within:border-cc-border-strong focus-within:shadow-cc-raised',
+          // `isolate` is what makes the `background` slot possible. `relative` alone gives
+          // `z-index: auto`, which does *not* create a stacking context, so the negatively
+          // stacked backdrop below would escape to the parent context and be painted under
+          // this element's own `bg-cc-surface` — i.e. be invisible.
+          background && 'isolate',
           dragging ? 'border-cc-accent' : 'border-cc-border',
           disabled && 'opacity-60',
         )}
       >
+        {background && (
+          <div
+            aria-hidden="true"
+            className={cn(
+              // Negative z-index rather than plain `absolute`: an absolutely positioned
+              // child with `z-index: auto` paints *above* in-flow content, so it would
+              // cover the textarea and the toolbar instead of sitting behind them.
+              'pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-cc-lg',
+              'transition-opacity duration-200 ease-cc',
+              backgroundVisible === 'empty' && !composerEmpty && 'opacity-0',
+            )}
+          >
+            {background}
+          </div>
+        )}
+
         {(hasAttachments || quote || header) && (
           <div className="flex flex-col gap-2 border-b border-cc-border px-3 py-2.5">
             {attachments && (
@@ -387,10 +486,18 @@ export function PromptInput(props: PromptInputProps) {
           )}
 
           <div className="flex shrink-0 items-center gap-1.5">
-            {streaming ? (
+            {/* Send and stop are two different intentions and one slot cannot hold both.
+                With a queue, this stays "send" — now meaning "queue it" — and stopping
+                moves to the status bar above, which is a far bigger target for the thing
+                people reach for most while an answer runs long. */}
+            {streaming && !queueing ? (
               <StopButton onClick={() => onStop?.()} label={locale.stop} />
             ) : (
-              <SendButton onClick={submit} disabled={!canSend} label={locale.send} />
+              <SendButton
+                onClick={submit}
+                disabled={!canSend}
+                label={queueing ? locale.addToQueue : locale.send}
+              />
             )}
           </div>
         </div>
@@ -499,7 +606,11 @@ export function SendButton({
         className,
       )}
     >
-      <ArrowUpIcon size={16} />
+      {/* Larger and heavier than the icon set's 16px / 1.5 default. Those values are tuned
+          for glyphs sitting next to text; alone in the middle of a 32px filled circle the
+          same arrow reads as a thin scratch. `Icon` spreads props after its own defaults,
+          so this overrides the stroke without touching `ArrowUpIcon` elsewhere. */}
+      <ArrowUpIcon size={18} strokeWidth={2.25} />
     </button>
   )
 }

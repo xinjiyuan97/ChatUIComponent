@@ -1,17 +1,20 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Meta, StoryObj } from '@storybook/react'
 
 import {
   useAttachments,
+  usePromptQueue,
   type Attachment,
   type ChatMessage,
   type QuotedMessage,
 } from '@xinjiyuan97/chat-core'
 import {
+  AgentIcon,
   AttachmentList,
   ChatMessageList,
   Message,
   ModelSelect,
+  PromptBackdrop,
   PromptInput,
   QuotePreview,
   SuggestionChips,
@@ -437,6 +440,178 @@ export const Controlled: Story = {
                 {text}
               </span>
             ))}
+          </div>
+        </div>
+      )
+    }
+    return <Demo />
+  },
+}
+
+// ---------------------------------------------------------------------------
+// Background slot
+// ---------------------------------------------------------------------------
+
+export const WithBackground: Story = {
+  name: '背景插槽',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`background` 画在框内、文本域与工具栏**之下**，不占文档流、不改变输入框高度，也永不接收指针事件 —— 点水印会聚焦到下面的文本域。默认 `backgroundVisible="empty"`，一开始打字就淡出：水印压着用户正在写的句子是个可读性问题，不是品牌时刻。\n\n实现上唯一的坑是层叠：容器只有 `relative` 时 `z-index: auto` **不创建层叠上下文**，负 z-index 的背景层会逃到父级上下文、被容器自己的 `bg-cc-surface` 盖住而完全看不见；所以有 `background` 时容器要加 `isolate`。反过来，不用负 z-index 也不行 —— `absolute` + `z-index: auto` 的子节点在绘制顺序里排在普通流内容**之后**，会盖住文本域。',
+      },
+    },
+  },
+  render: (args) => {
+    const Demo = () => (
+      <div className="flex flex-col gap-6">
+        <div>
+          <Hint>
+            角标水印。默认
+            placement=&quot;top-right&quot;：空输入框里被占用的只有左上的占位文字和整条底部工具栏，右上是唯一没人认领的区域。放
+            bottom-right 会正好压在发送按钮下面。
+          </Hint>
+          <PromptInput
+            {...args}
+            background={
+              <PromptBackdrop>
+                <span className="text-[2rem] font-semibold tracking-tight">Acme</span>
+              </PromptBackdrop>
+            }
+          />
+        </div>
+
+        <div>
+          <Hint>整块渐变，placement=&quot;fill&quot;：不做内边距，透明度交给内容自己控制。</Hint>
+          <PromptInput
+            {...args}
+            background={
+              <PromptBackdrop placement="fill">
+                <div className="size-full bg-[linear-gradient(115deg,var(--color-cc-accent-subtle)_0%,transparent_55%)]" />
+              </PromptBackdrop>
+            }
+          />
+        </div>
+
+        <div>
+          <Hint>
+            居中图标 + backgroundVisible=&quot;always&quot;：打字后也不淡出，用于确认淡出确实是那个
+            prop 控制的。
+          </Hint>
+          <PromptInput
+            {...args}
+            defaultValue="这一条有内容，但水印仍然在。"
+            backgroundVisible="always"
+            background={
+              <PromptBackdrop placement="center" opacity={0.05}>
+                <AgentIcon size={72} />
+              </PromptBackdrop>
+            }
+          />
+        </div>
+
+        <div>
+          <Hint>
+            对照组：同样的水印，默认
+            backgroundVisible=&quot;empty&quot;，有内容所以已经淡出。清空文本框它会回来。
+          </Hint>
+          <PromptInput
+            {...args}
+            defaultValue="这一条有内容，水印已淡出。"
+            background={
+              <PromptBackdrop placement="center" opacity={0.05}>
+                <AgentIcon size={72} />
+              </PromptBackdrop>
+            }
+          />
+        </div>
+      </div>
+    )
+    return <Demo />
+  },
+}
+
+// ---------------------------------------------------------------------------
+// Prompt queue
+// ---------------------------------------------------------------------------
+
+export const WithQueue: Story = {
+  name: '输入端队列',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '生成中继续打字，按 Enter 或点发送就进队列而不是发出去；上一轮结束后按顺序自动发出下一条，一次只发一条。队列项点一下可以就地改写，hover 行尾的 × 移除。\n\n**发送和停止是两个动作，一个位置装不下。** 所以传了 `queue` 之后，发送按钮始终是发送/入队，停止移到输入框上方那条状态条上 —— 整条可点，而不是只让右边的小图标可点：生成中最常见的诉求就是叫停，把点击区做到最小是反的。不传 `queue` 时行为完全不变，仍然是发送按钮变停止按钮。',
+      },
+    },
+  },
+  render: (args) => {
+    const Demo = () => {
+      const [log, setLog] = useState<string[]>([])
+      const [busy, setBusy] = useState(false)
+      const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+      const settle = useRef<(() => void) | null>(null)
+
+      /* Stands in for a turn: three seconds of "streaming" that `stop` can cut short. The
+         promise is what `usePromptQueue` awaits before releasing the next item. */
+      const run = (text: string) =>
+        new Promise<void>((resolve) => {
+          setBusy(true)
+          setLog((list) => [...list, `▶ 开始：${text}`])
+          settle.current = () => {
+            timer.current = null
+            settle.current = null
+            setBusy(false)
+            resolve()
+          }
+          timer.current = setTimeout(() => {
+            setLog((list) => [...list, `✓ 完成：${text}`])
+            settle.current?.()
+          }, 3000)
+        })
+
+      const queue = usePromptQueue({
+        busy,
+        onSend: (item) => run(item.text),
+      })
+
+      const stop = () => {
+        if (timer.current) clearTimeout(timer.current)
+        setLog((list) => [...list, '■ 已停止'])
+        settle.current?.()
+      }
+
+      useEffect(
+        () => () => {
+          if (timer.current) clearTimeout(timer.current)
+        },
+        [],
+      )
+
+      return (
+        <div className="flex flex-col gap-3">
+          <Hint>
+            先发一条，趁着 3 秒的「生成中」再连打两条 ——
+            它们会排在输入框上方。等第一轮结束，看它们按顺序、一次一条地自动发出。中途点状态条可以停止；停止只是叫停当前输出，队列里已经写好的话会保留。
+          </Hint>
+          <PromptInput
+            {...args}
+            queue={queue}
+            streaming={busy}
+            onStop={stop}
+            onSubmit={(text) => void run(text)}
+          />
+          <div className="flex flex-col gap-0.5 rounded-cc-sm border border-cc-border bg-cc-surface/60 p-2.5 text-cc-xs">
+            <span className="mb-1 text-cc-faint">时间线（队列长度 {queue.size}）</span>
+            {log.length === 0 ? (
+              <span className="text-cc-faint">还没有发过消息</span>
+            ) : (
+              log.map((entry, index) => (
+                <span key={index} className="font-cc-mono text-cc-muted">
+                  {entry}
+                </span>
+              ))
+            )}
           </div>
         </div>
       )

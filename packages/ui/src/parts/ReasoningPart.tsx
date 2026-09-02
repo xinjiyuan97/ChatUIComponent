@@ -26,6 +26,10 @@ export type ReasoningPartProps = {
  * opens itself when tokens start arriving and closes when they stop. A manual toggle wins
  * permanently after that — nothing is worse than an expander that keeps re-collapsing
  * under the reader's cursor.
+ *
+ * When there is no reasoning *text* — several providers report only that thinking happened
+ * and for how long — this degrades to a one-line receipt rather than disappearing. An
+ * unexplained pause in the transcript is worse than a dim line saying what it was.
  */
 export function ReasoningPart({
   part,
@@ -59,11 +63,42 @@ export function ReasoningPart({
           {formatted ? locale.thoughtFor(formatted) : locale.reasoning}
         </span>
       )}
-      {streaming && formatted && <span className="tabular-nums text-cc-faint">{formatted}</span>}
+      {streaming && formatted && (
+        <span className="tabular-nums text-cc-xs text-cc-faint">{formatted}</span>
+      )}
     </span>
   )
 
-  if (!part.text && !streaming) return null
+  /* No text to disclose. Rendering the same header without a disclosure — rather than a
+   * chevron over an empty panel — is the honest shape: there is nothing to open, and an
+   * expander that rewards a click with blank space is a small betrayal. */
+  if (!part.text) {
+    // Nothing happened worth reporting at all: no text, no timing, not flagged, not live.
+    if (!streaming && !part.redacted && formatted === '') return null
+
+    return (
+      <div
+        // `pl-5` matches the chevron column of an expandable block (14px glyph + 6px gap),
+        // so a run of reasoning rows keeps one icon column instead of zig-zagging.
+        className={cn(
+          'my-1 flex min-w-0 items-center py-1 pl-5 text-cc-sm text-cc-muted',
+          className,
+        )}
+        data-cc-reasoning="empty"
+      >
+        {streaming ? (
+          header
+        ) : (
+          <span className="flex min-w-0 items-center gap-1.5">
+            <ThinkingIcon size={13} className="shrink-0 text-cc-faint" />
+            <span className="truncate">
+              {formatted ? locale.thoughtFor(formatted) : locale.reasoningHidden}
+            </span>
+          </span>
+        )}
+      </div>
+    )
+  }
 
   return (
     <Collapsible

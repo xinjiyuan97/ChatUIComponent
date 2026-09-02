@@ -331,4 +331,63 @@ describe('applyEvent', () => {
     expect(message.parts.map((part) => part.type)).toEqual(['todo', 'todo'])
     expect(message.parts[0]).toMatchObject({ todoId: 'default' })
   })
+
+  it('marks a reasoning block redacted from either end of the stream', () => {
+    const fromStart = replay([
+      { type: 'reasoning-start', redacted: true },
+      { type: 'reasoning-end' },
+    ])
+    const fromEnd = replay([{ type: 'reasoning-start' }, { type: 'reasoning-end', redacted: true }])
+
+    // A start event that already declared the block redacted must survive an end event
+    // that says nothing about it.
+    expect(fromStart.parts[0]).toMatchObject({ type: 'reasoning', text: '', redacted: true })
+    expect(fromEnd.parts[0]).toMatchObject({ type: 'reasoning', text: '', redacted: true })
+  })
+
+  it('replaces a generating file placeholder in place, keeping its dimensions', () => {
+    const message = replay([
+      {
+        type: 'file',
+        id: 'img1',
+        mediaType: 'image/png',
+        status: 'generating',
+        width: 1024,
+        height: 768,
+      },
+      { type: 'file', id: 'img1', mediaType: 'image/png', status: 'ready', url: 'https://x/o.png' },
+    ])
+
+    expect(message.parts).toHaveLength(1)
+    // The completion event carries no dimensions; losing the ones declared up front would
+    // collapse the reserved box at the exact moment the image lands.
+    expect(message.parts[0]).toEqual({
+      type: 'file',
+      id: 'img1',
+      mediaType: 'image/png',
+      status: 'ready',
+      url: 'https://x/o.png',
+      width: 1024,
+      height: 768,
+    })
+  })
+
+  it('appends rather than replaces when a file carries no id', () => {
+    const message = replay([
+      { type: 'file', mediaType: 'image/png', url: 'https://x/a.png' },
+      { type: 'file', mediaType: 'image/png', url: 'https://x/b.png' },
+    ])
+
+    expect(message.parts).toHaveLength(2)
+  })
+
+  it('fails a file still generating when the stream ends', () => {
+    const message = replay([
+      { type: 'file', id: 'img1', mediaType: 'image/png', status: 'generating' },
+      { type: 'message-end' },
+    ])
+
+    // A placeholder that shimmers forever is a bug the user has to guess at, not a state.
+    expect(message.parts[0]).toMatchObject({ type: 'file', status: 'error' })
+  })
 })

@@ -8,10 +8,13 @@ import { CloseIcon, PlusIcon, SearchIcon, SidebarIcon } from '../icons'
 import { useLocale } from '../provider/ChatThemeProvider'
 import { AgentBadge } from './AgentGroup'
 import { ConversationList } from './ConversationList'
+import type { ActiveIndicator } from './ConversationItem'
 
 export type ConversationSidebarProps = {
   conversations: Conversation[]
   activeId?: string
+  /** `none` drops the accent bar on the active row, leaving only its tinted fill. */
+  activeIndicator?: ActiveIndicator
   loading?: boolean
   /** Groups the list into collapsible per-agent sections. */
   agents?: Agent[]
@@ -53,6 +56,7 @@ export function ConversationSidebar(props: ConversationSidebarProps) {
   const {
     conversations,
     activeId,
+    activeIndicator,
     loading,
     agents,
     collapsedAgentIds,
@@ -131,6 +135,7 @@ export function ConversationSidebar(props: ConversationSidebarProps) {
         <ConversationList
           conversations={conversations}
           activeId={activeId}
+          activeIndicator={activeIndicator}
           query={collapsed ? undefined : query}
           loading={loading}
           collapsed={collapsed}

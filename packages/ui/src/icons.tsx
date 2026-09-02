@@ -246,6 +246,15 @@ export const ImageIcon = (props: IconProps) => (
   </Icon>
 )
 
+/** An image that could not be loaded. The slash carries the meaning without adding colour. */
+export const ImageOffIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <rect x="3.5" y="4.5" width="17" height="15" rx="2" />
+    <path d="m4.5 16.5 4.2-4.2a1.6 1.6 0 0 1 2.3 0l2 2" />
+    <path d="M4 20 20 4" />
+  </Icon>
+)
+
 export const UploadIcon = (props: IconProps) => (
   <Icon {...props}>
     <path d="M12 16.5V4M7.5 8.5 12 4l4.5 4.5" />

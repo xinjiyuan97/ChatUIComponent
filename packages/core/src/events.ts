@@ -1,6 +1,7 @@
 import type {
   A2UINode,
   A2UIPatch,
+  FileStatus,
   PermissionRequest,
   PermissionResolution,
   TodoItem,
@@ -20,9 +21,14 @@ export type ChatEvent =
   | { type: 'text-start' }
   | { type: 'text-delta'; delta: string }
   | { type: 'text-end' }
-  | { type: 'reasoning-start' }
+  /**
+   * `redacted` means the model is thinking but no text will follow — several providers
+   * report only that it happened. Some transports know this up front, others only when
+   * the block closes, so both ends accept the flag.
+   */
+  | { type: 'reasoning-start'; redacted?: boolean }
   | { type: 'reasoning-delta'; delta: string }
-  | { type: 'reasoning-end' }
+  | { type: 'reasoning-end'; redacted?: boolean }
   | { type: 'tool-input-start'; toolCallId: string; name: string }
   /** A chunk of the argument JSON, as raw text. */
   | { type: 'tool-input-delta'; toolCallId: string; delta: string }
@@ -43,7 +49,27 @@ export type ChatEvent =
   | { type: 'permission-resolved'; requestId: string; resolution: PermissionResolution }
   /** The agent's plan. Re-emitting the same `todoId` replaces it rather than appending. */
   | { type: 'todo'; todoId?: string; items: TodoItem[]; title?: string }
-  | { type: 'file'; url: string; mediaType: string; name?: string }
+  /**
+   * A file, or a placeholder for one still being generated.
+   *
+   * Re-emitting the same `id` replaces the part in place, so the sequence is
+   * `{id, status:'generating', width, height}` then `{id, status:'ready', url}`. Fields
+   * omitted from the second event are kept — the dimensions declared up front are what
+   * hold the layout still while the bytes are on their way.
+   */
+  | {
+      type: 'file'
+      id?: string
+      url?: string
+      mediaType: string
+      name?: string
+      size?: number
+      status?: FileStatus
+      width?: number
+      height?: number
+      progress?: number
+      error?: string
+    }
   | { type: 'source'; url: string; title?: string; snippet?: string }
   | { type: 'custom'; name: string; data: unknown }
   | { type: 'message-end'; finishReason?: string; usage?: TokenUsage }

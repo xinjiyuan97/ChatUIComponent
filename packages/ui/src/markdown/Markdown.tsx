@@ -149,6 +149,8 @@ const COMPONENTS: Components = {
         'text-cc-accent underline decoration-cc-accent/30 underline-offset-2',
         'transition-colors duration-150 ease-cc hover:decoration-cc-accent',
         'outline-none focus-visible:ring-2 focus-visible:ring-cc-accent/45 rounded-cc-xs',
+        // A bare URL used as its own link text has no break opportunity either.
+        '[overflow-wrap:anywhere]',
       )}
     >
       {children}
@@ -173,7 +175,21 @@ const COMPONENTS: Components = {
   pre: PreBlock,
 
   code: ({ children }) => (
-    <code className="rounded-cc-xs bg-cc-subtle px-[0.35em] py-[0.15em] font-cc-mono text-[0.875em] text-cc-fg">
+    <code
+      className={cn(
+        'rounded-cc-xs bg-cc-subtle px-[0.35em] py-[0.15em] font-cc-mono text-[0.875em] text-cc-fg',
+        // Inline code is routinely a path, an identifier or a URL with no break
+        // opportunity in it, and one of those is enough to push the whole message column
+        // wider than its container. `anywhere` rather than `break-word` because only
+        // `anywhere` also shrinks the min-content width, which is what decides whether a
+        // long token folds or widens a table cell or flex child.
+        '[overflow-wrap:anywhere]',
+        // Without this the background and radius are painted once across the whole
+        // fragmented box, so a wrapped span loses its left padding and corners on the
+        // second line and reads as a rendering fault.
+        '[box-decoration-break:clone] [-webkit-box-decoration-break:clone]',
+      )}
+    >
       {children}
     </code>
   ),
@@ -228,7 +244,13 @@ function MarkdownImpl({ children, streaming = false, className }: MarkdownProps)
   const blocks = useMemo(() => splitMarkdownBlocks(children), [children])
 
   return (
-    <div className={cn('cc-markdown text-cc-body leading-[1.65] text-cc-fg', className)}>
+    /* `break-words` as the floor for prose. Deliberately not `anywhere` here: in running
+       text `anywhere` lets the browser break a word even when a better opportunity exists
+       later on the line, which shreds the right margin. `code` and `a` above opt into the
+       stronger rule because they are the elements that actually overflow. */
+    <div
+      className={cn('cc-markdown break-words text-cc-body leading-[1.65] text-cc-fg', className)}
+    >
       {blocks.map((block, index) => {
         const isLast = index === blocks.length - 1
         // Only the trailing block can be unterminated, and repairing it is only safe while

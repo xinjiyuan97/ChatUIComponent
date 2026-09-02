@@ -98,6 +98,7 @@
   --animate-cc-fade-in: cc-fade-in 0.2s var(--ease-cc) both;
   --animate-cc-rise: cc-rise 0.24s var(--ease-cc) both;
   --animate-cc-spin: cc-spin 0.7s linear infinite;
+  --animate-cc-pulse: cc-pulse 1.6s var(--ease-cc) infinite;
   --animate-cc-dot: cc-dot 1.3s var(--ease-cc) infinite;
   --animate-cc-ping: cc-ping 1.4s cubic-bezier(0, 0, 0.2, 1) infinite;
 
@@ -202,6 +203,19 @@
 @keyframes cc-spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* "Working on it" for a glyph that has no natural rotation — a spinning camera or a
+ * spinning magnifier reads as a broken icon. Bottoms out at 0.45 rather than 0: a glyph
+ * that fully disappears makes the row look like it is flickering out of existence. */
+@keyframes cc-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
   }
 }
 

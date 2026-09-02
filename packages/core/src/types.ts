@@ -55,6 +55,15 @@ export type ReasoningPart = {
   durationMs?: number
   /** Wall-clock start, used to render a live counter while streaming. */
   startedAt?: number
+  /**
+   * The model reasoned, but the provider returned no text for it.
+   *
+   * Several providers report only that thinking happened and how long it took — the
+   * content is withheld or summarised away. That is not the same as "no reasoning", and
+   * rendering nothing leaves the user with an unexplained pause in the transcript, so the
+   * flag exists to let the UI show a one-line receipt instead of an empty expander.
+   */
+  redacted?: boolean
 }
 
 export type ToolPart = {
@@ -82,12 +91,37 @@ export type A2UIPart = {
   resolved?: boolean
 }
 
+/** Where a file is in its lifecycle. Absent means "already there", the common case. */
+export type FileStatus = 'generating' | 'ready' | 'error'
+
+/**
+ * An attachment, or a file the agent is still producing.
+ *
+ * The lifecycle fields exist for generated media: an image takes tens of seconds to come
+ * back, and a transcript that shows nothing until it lands — then reflows around it — is
+ * worse than one that reserves the box up front. `width`/`height` are what make that
+ * reservation possible before a single byte of the bitmap exists.
+ */
 export type FilePart = {
   type: 'file'
-  url: string
+  /**
+   * Stable identity across updates. A `file` event carrying an id already present replaces
+   * that part instead of appending, which is how a placeholder becomes the finished file.
+   */
+  id?: string
+  /** Absent while `status` is `generating` — there is nothing to point at yet. */
+  url?: string
   mediaType: string
   name?: string
   size?: number
+  status?: FileStatus
+  /** Intrinsic pixel dimensions, used to reserve the aspect ratio ahead of the bytes. */
+  width?: number
+  height?: number
+  /** 0–1. Only when the generator actually reports progress; absent means indeterminate. */
+  progress?: number
+  /** Why generation failed, with `status: 'error'`. */
+  error?: string
 }
 
 export type SourcePart = {

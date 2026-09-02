@@ -7,6 +7,8 @@ export type ChatLocale = {
   thinking: string
   thoughtFor: (duration: string) => string
   reasoning: string
+  /** The model thought but returned no text, and not even a duration to report. */
+  reasoningHidden: string
 
   toolRunning: string
   toolSucceeded: string
@@ -76,6 +78,19 @@ export type ChatLocale = {
 
   send: string
   stop: string
+  /** Streaming status bar above the composer, and the send button while queueing. */
+  generating: string
+  stopGenerating: string
+  addToQueue: string
+  /** Header above the queued prompts, e.g. 「已排队 2 条」. */
+  queued: (count: number) => string
+  removeFromQueue: string
+  editQueued: string
+  /** The queue is held because the user pressed stop. */
+  queuePaused: string
+  queueResume: string
+  /** A queued prompt that carries only attachments. */
+  queuedAttachmentsOnly: string
   attach: string
   model: string
   inputPlaceholder: string
@@ -85,6 +100,15 @@ export type ChatLocale = {
   /** Title of the strip above the composer, when the quote has no author. */
   quoteReply: string
   removeQuote: string
+
+  /** Generated media, while the box is still a placeholder. */
+  imageGenerating: string
+  /** The generator refused or errored — an agent-level event. */
+  imageFailed: string
+  /** The URL simply would not load. A fact about one asset, not a failure of the turn. */
+  imageUnavailable: string
+  fileGenerating: string
+  fileFailed: string
 
   attachImage: string
   removeAttachment: (name: string) => string
@@ -156,6 +180,7 @@ export const zhCN: ChatLocale = {
   thinking: '思考中',
   thoughtFor: (duration) => `思考 ${duration}`,
   reasoning: '思考过程',
+  reasoningHidden: '已思考',
 
   toolRunning: '执行中',
   toolSucceeded: '完成',
@@ -215,6 +240,15 @@ export const zhCN: ChatLocale = {
 
   send: '发送',
   stop: '停止',
+  generating: '生成中',
+  stopGenerating: '停止',
+  addToQueue: '加入队列',
+  queued: (count) => `已排队 ${count} 条`,
+  removeFromQueue: '移出队列',
+  editQueued: '点击修改',
+  queuePaused: '已暂停',
+  queueResume: '继续发送',
+  queuedAttachmentsOnly: '（仅附件）',
   attach: '添加附件',
   model: '模型',
   inputPlaceholder: '输入消息…',
@@ -222,6 +256,12 @@ export const zhCN: ChatLocale = {
 
   quoteReply: '引用回复',
   removeQuote: '取消引用',
+
+  imageGenerating: '生成中',
+  imageFailed: '图片生成失败',
+  imageUnavailable: '图片无法加载',
+  fileGenerating: '生成中',
+  fileFailed: '文件生成失败',
 
   attachImage: '添加图片',
   removeAttachment: (name) => `移除 ${name}`,
@@ -294,6 +334,7 @@ export const enUS: ChatLocale = {
   thinking: 'Thinking',
   thoughtFor: (duration) => `Thought for ${duration}`,
   reasoning: 'Reasoning',
+  reasoningHidden: 'Thought about it',
 
   toolRunning: 'Running',
   toolSucceeded: 'Done',
@@ -353,6 +394,15 @@ export const enUS: ChatLocale = {
 
   send: 'Send',
   stop: 'Stop',
+  generating: 'Generating',
+  stopGenerating: 'Stop',
+  addToQueue: 'Add to queue',
+  queued: (count) => `${count} queued`,
+  removeFromQueue: 'Remove from queue',
+  editQueued: 'Click to edit',
+  queuePaused: 'Paused',
+  queueResume: 'Resume',
+  queuedAttachmentsOnly: '(attachments only)',
   attach: 'Attach files',
   model: 'Model',
   inputPlaceholder: 'Send a message…',
@@ -360,6 +410,12 @@ export const enUS: ChatLocale = {
 
   quoteReply: 'Replying to',
   removeQuote: 'Remove quote',
+
+  imageGenerating: 'Generating',
+  imageFailed: 'Image generation failed',
+  imageUnavailable: 'Image unavailable',
+  fileGenerating: 'Generating',
+  fileFailed: 'File generation failed',
 
   attachImage: 'Add an image',
   removeAttachment: (name) => `Remove ${name}`,

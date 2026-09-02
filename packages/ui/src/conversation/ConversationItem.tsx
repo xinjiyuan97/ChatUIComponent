@@ -16,9 +16,19 @@ import { formatDateTime } from '../lib/format'
 import { CheckIcon, CloseIcon, EditIcon, MoreIcon, PinIcon, TrashIcon } from '../icons'
 import { useLocale } from '../provider/ChatThemeProvider'
 
+/**
+ * How the active row is marked.
+ *
+ * `none` drops the accent bar and keeps the tinted fill, which is still enough to tell
+ * which conversation is open — the fill, not the bar, is what carries that on its own.
+ */
+export type ActiveIndicator = 'bar' | 'none'
+
 export type ConversationItemProps = {
   conversation: Conversation
   active?: boolean
+  /** Defaults to `bar`. */
+  activeIndicator?: ActiveIndicator
   /** Substring to highlight, from the search box. */
   query?: string
   /** Renders as the keyboard-focused row without moving DOM focus. */
@@ -46,11 +56,16 @@ export const SUBTITLE_ROW_HEIGHT = 46
  * The active row is marked with a 2px accent bar and a faint fill rather than a solid
  * accent background: the sidebar sits beside the conversation for the entire session, and
  * a saturated block there pulls attention away from the text the whole time.
+ *
+ * `activeIndicator="none"` drops the bar for products whose rail already has a leading
+ * column — an avatar, a favicon, a status dot — where a second element on the same edge
+ * reads as clutter rather than as emphasis.
  */
 export function ConversationItem(props: ConversationItemProps) {
   const {
     conversation,
     active = false,
+    activeIndicator = 'bar',
     query,
     focused = false,
     collapsed = false,
@@ -124,7 +139,7 @@ export function ConversationItem(props: ConversationItemProps) {
       )}
       title={`${conversation.title}\n${formatDateTime(conversation.updatedAt, locale.code)}`}
     >
-      {active && (
+      {active && activeIndicator === 'bar' && (
         <span
           aria-hidden="true"
           className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-cc-accent"

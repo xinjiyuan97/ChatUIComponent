@@ -115,6 +115,29 @@ export const UnclosedSyntax: Story = {
  * GitHub's syntax, which is what models emit; an unrecognised marker degrades to a plain
  * quote with its text intact rather than leaving a stray `[!DANGER]` in the output.
  */
+const MARKDOWN_UNBREAKABLE = `模型回答里经常出现没有断点的长 token。配置项在 \`packages/ui/src/provider/ChatThemeProvider.tsx#ChatThemeContextValue.toolRenderers\` 里，环境变量是 \`NEXT_PUBLIC_ANALYTICS_INGEST_ENDPOINT_OVERRIDE_FOR_STAGING\`，出问题时看 https://observability.internal.example.com/d/abc123/chat-streaming?orgId=1&from=now-24h&to=now&var-service=chat-gateway 这个面板。
+
+散文里的长词同样要能折：Donaudampfschifffahrtselektrizitätenhauptbetriebswerkbauunterbeamtengesellschaft。`
+
+export const Unbreakable: Story = {
+  name: '长 token 换行',
+  render: () => (
+    // Deliberately narrow: the failure only shows up when the token is wider than the
+    // column, which on a full-width canvas it never is.
+    <div className="max-w-sm rounded-cc-md border border-cc-border p-3">
+      <Markdown>{MARKDOWN_UNBREAKABLE}</Markdown>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '行内代码和裸 URL 用 `overflow-wrap: anywhere`（而不是 `break-word`）：只有 `anywhere` 会同时缩小 min-content 宽度，这决定了长 token 是折行还是把容器顶宽。行内代码另加 `box-decoration-break: clone`，否则折行后第二行会缺左 padding 和圆角，看起来像渲染坏了。正文本身只用 `break-words` —— 在散文里 `anywhere` 会在还有更优断点时提前断字，把右边缘切得稀碎。',
+      },
+    },
+  },
+}
+
 export const Quotes: Story = {
   name: 'Blockquotes & callouts',
   render: () => <Markdown>{MARKDOWN_CALLOUTS}</Markdown>,

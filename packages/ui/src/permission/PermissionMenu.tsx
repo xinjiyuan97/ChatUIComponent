@@ -134,6 +134,11 @@ export function PermissionMenu(props: PermissionMenuProps) {
         onKeyDown={menu.onKeyDown}
         className="border-t border-cc-border/70 p-1"
       >
+        {/* The cursor deliberately does not follow the pointer. Hover only tints the row;
+            moving the selection on `mouseenter` made the card twitch — the active row swaps
+            its label to `font-medium` and fills its number badge, so simply crossing the
+            menu on the way somewhere else animated three rows in turn. Clicking still
+            commits the row under the pointer, so nothing is lost. */}
         {menu.options.map((option, index) => {
           const active = index === menu.activeIndex
           return (
@@ -147,7 +152,6 @@ export function PermissionMenu(props: PermissionMenuProps) {
               disabled={option.disabled}
               tabIndex={active ? 0 : -1}
               onClick={() => menu.choose(index)}
-              onMouseEnter={() => !option.disabled && menu.setActiveIndex(index)}
               className={cn(
                 'flex w-full items-start gap-2.5 rounded-cc-xs px-2 py-1.5 text-left',
                 'transition-colors duration-150 ease-cc outline-none',

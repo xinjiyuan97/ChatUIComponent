@@ -1,5 +1,5 @@
 import type { ChatEvent } from './events'
-import type { ChatMessage, MessagePart, ReasoningPart, TextPart, ToolPart } from './types'
+import type { ChatMessage, FilePart, MessagePart, ReasoningPart, TextPart, ToolPart } from './types'
 
 /**
  * Applies one normalised event to the in-flight assistant message.
@@ -33,7 +33,10 @@ export function applyEvent(
       return message
 
     case 'reasoning-start':
-      return withParts(message, [...message.parts, { type: 'reasoning', text: '', startedAt: now }])
+      return withParts(message, [
+        ...message.parts,
+        { type: 'reasoning', text: '', startedAt: now, ...redactedFlag(event.redacted) },
+      ])
 
     case 'reasoning-delta':
       return appendToLast<ReasoningPart>(
@@ -51,6 +54,9 @@ export function applyEvent(
       if (part.durationMs !== undefined) return message
       return replacePart(message, index, {
         ...part,
+        // Only ever sets the flag. A start event that already declared the block redacted
+        // must survive an end event that says nothing about it.
+        ...redactedFlag(event.redacted),
         durationMs: part.startedAt !== undefined ? now - part.startedAt : undefined,
       })
     }
@@ -180,11 +186,24 @@ export function applyEvent(
         : replacePart(message, index, next)
     }
 
-    case 'file':
-      return withParts(message, [
-        ...message.parts,
-        { type: 'file', url: event.url, mediaType: event.mediaType, name: event.name },
-      ])
+    case 'file': {
+      const { type: _type, ...fields } = event
+      // `mediaType` last: it is the one required field, and letting the widened spread
+      // land on top of it would make it optional again.
+      const next: FilePart = { ...stripUndefined(fields), type: 'file', mediaType: event.mediaType }
+
+      const index =
+        event.id === undefined
+          ? -1
+          : message.parts.findIndex((p) => p.type === 'file' && p.id === event.id)
+      if (index === -1) return withParts(message, [...message.parts, next])
+
+      // Merged, not overwritten: the completion event usually carries only `{id, url,
+      // status}`, and the dimensions declared by the placeholder are exactly what keeps
+      // the box from collapsing between the two events.
+      const previous = message.parts[index] as FilePart
+      return replacePart(message, index, { ...previous, ...next })
+    }
 
     case 'source':
       return withParts(message, [
@@ -249,6 +268,26 @@ function replacePart(message: ChatMessage, index: number, part: MessagePart): Ch
   const parts = message.parts.slice()
   parts[index] = part
   return withParts(message, parts)
+}
+
+/** `{ redacted: true }` or nothing — never `{ redacted: false }`, which would clear it. */
+function redactedFlag(redacted: boolean | undefined): { redacted?: true } {
+  return redacted ? { redacted: true } : {}
+}
+
+/**
+ * Drops keys whose value is `undefined`.
+ *
+ * Spreading an event straight onto an existing part would let its absent optional fields
+ * overwrite real ones with `undefined` — a completion event that omits `width` must not
+ * erase the width the placeholder declared.
+ */
+function stripUndefined<T extends object>(source: T): Partial<T> {
+  const result: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(source)) {
+    if (value !== undefined) result[key] = value
+  }
+  return result as Partial<T>
 }
 
 function lastIndexOfType(parts: MessagePart[], type: MessagePart['type']): number {
@@ -326,6 +365,15 @@ function closeDanglingParts(parts: MessagePart[], now: number): MessagePart[] {
   return parts.map((part) => {
     if (part.type === 'reasoning' && part.durationMs === undefined && part.startedAt) {
       return { ...part, durationMs: now - part.startedAt }
+    }
+    if (part.type === 'file' && part.status === 'generating') {
+      // Same reasoning as the tool rule below: a placeholder that shimmers forever is a
+      // bug the user has to guess at, not a state.
+      return {
+        ...part,
+        status: 'error' as const,
+        error: part.error ?? 'Stream ended before the file was generated',
+      }
     }
     if (part.type === 'tool' && (part.state === 'input-streaming' || part.state === 'executing')) {
       // The stream ended without a result: surface it as an error rather than an

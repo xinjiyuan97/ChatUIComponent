@@ -22,11 +22,13 @@ import { cn } from '../lib/cn'
 import { Skeleton } from '../primitives/Skeleton'
 import { useLocale } from '../provider/ChatThemeProvider'
 import { AGENT_HEADER_HEIGHT, AgentSectionHeader } from './AgentGroup'
-import { ConversationItem, SUBTITLE_ROW_HEIGHT } from './ConversationItem'
+import { ConversationItem, SUBTITLE_ROW_HEIGHT, type ActiveIndicator } from './ConversationItem'
 
 export type ConversationListProps = {
   conversations: Conversation[]
   activeId?: string
+  /** `none` drops the accent bar on the active row, leaving only its tinted fill. */
+  activeIndicator?: ActiveIndicator
   /** Search term: filters the list and highlights matches. */
   query?: string
   loading?: boolean
@@ -87,6 +89,7 @@ export function ConversationList(props: ConversationListProps) {
   const {
     conversations,
     activeId,
+    activeIndicator,
     query,
     loading = false,
     collapsed = false,
@@ -318,6 +321,7 @@ export function ConversationList(props: ConversationListProps) {
                 key={row.conversation.id}
                 conversation={row.conversation}
                 active={row.conversation.id === activeId}
+                activeIndicator={activeIndicator}
                 focused={row.index === focusedIndex}
                 query={query}
                 collapsed={collapsed}
@@ -365,6 +369,7 @@ export function ConversationGroup({
   label,
   conversations,
   activeId,
+  activeIndicator,
   query,
   collapsed,
   onSelect,
@@ -383,6 +388,7 @@ export function ConversationGroup({
           key={conversation.id}
           conversation={conversation}
           active={conversation.id === activeId}
+          activeIndicator={activeIndicator}
           query={query}
           collapsed={collapsed}
           onSelect={onSelect}

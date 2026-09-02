@@ -1,37 +1,32 @@
 'use client'
 
-import type { ChatMessage, PermissionResolution, ToolPart } from '@xinjiyuan97/chat-core'
+import type { ChatMessage, PermissionResolution } from '@xinjiyuan97/chat-core'
 import type { A2UIAction, A2UIRegistry } from '@xinjiyuan97/chat-a2ui'
-import { createContext, useContext, useMemo, type ComponentType, type ReactNode } from 'react'
+import { createContext, useContext, useMemo, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 /* Type-only, so this does not create an import cycle with `CodeBlock`, which imports
  * `useChatTheme` from here at runtime. */
 import type { CodeRunner } from '../markdown/CodeBlock'
 import { locales, zhCN, type ChatLocale, type LocaleName } from './locale'
+import type { ToolDefinition, ToolRenderer, ToolVariant } from './tools'
 
 export type Density = 'comfortable' | 'compact'
-
-export type ToolRendererProps = {
-  part: ToolPart
-  message: ChatMessage
-}
-
-/**
- * A host-supplied renderer for one tool.
- *
- * This is the main extension point for function calls: register `read_file` and its
- * results render as a diff, register `search` and they render as a result list, while
- * every unregistered tool falls back to the generic JSON panel.
- */
-export type ToolRenderer = ComponentType<ToolRendererProps>
 
 export type AvatarRenderer = (message: ChatMessage) => ReactNode
 
 export type ChatThemeContextValue = {
   locale: ChatLocale
   density: Density
+  /**
+   * The registry components actually read: `toolRenderers` normalised into
+   * `ToolDefinition`s and merged under `tools`.
+   */
+  tools: Record<string, ToolDefinition>
+  /** @deprecated Use `tools`. Kept so existing readers of the context keep working. */
   toolRenderers: Record<string, ToolRenderer>
+  /** Layout for tool calls that do not set `compact` themselves. */
+  toolVariant: ToolVariant
   a2uiRegistry: A2UIRegistry
   onA2UIAction?: (action: A2UIAction, message: ChatMessage) => void
   /**
@@ -64,7 +59,9 @@ const ChatThemeContext = createContext<ChatThemeContextValue | null>(null)
 const FALLBACK: ChatThemeContextValue = {
   locale: zhCN,
   density: 'comfortable',
+  tools: {},
   toolRenderers: {},
+  toolVariant: 'default',
   a2uiRegistry: {},
   codeThemes: { light: 'github-light', dark: 'github-dark' },
   mermaid: true,
@@ -85,11 +82,29 @@ export function useLocale(): ChatLocale {
   return useChatTheme().locale
 }
 
+/** How the host wants one named tool rendered, if it registered anything for it. */
+export function useToolDefinition(name: string): ToolDefinition | undefined {
+  return useChatTheme().tools[name]
+}
+
 export type ChatThemeProviderProps = {
   children: ReactNode
   locale?: LocaleName | ChatLocale
   density?: Density
+  /**
+   * Per-tool presentation: glyph, label, motion, layout, or a full replacement renderer.
+   *
+   * Wins over `toolRenderers` for the same name.
+   */
+  tools?: Record<string, ToolDefinition>
+  /** @deprecated Use `tools` with a `render` field. */
   toolRenderers?: Record<string, ToolRenderer>
+  /**
+   * Default layout for every tool call. `compact` collapses them to one log-style line
+   * each, which is what makes a twenty-call turn readable; individual tools can still opt
+   * in or out via their `ToolDefinition`.
+   */
+  toolVariant?: ToolVariant
   a2uiRegistry?: A2UIRegistry
   onA2UIAction?: (action: A2UIAction, message: ChatMessage) => void
   onPermissionDecision?: (resolution: PermissionResolution, message: ChatMessage) => void
@@ -116,7 +131,9 @@ export function ChatThemeProvider(props: ChatThemeProviderProps) {
     children,
     locale = 'zh-CN',
     density = 'comfortable',
+    tools,
     toolRenderers,
+    toolVariant = 'default',
     a2uiRegistry,
     onA2UIAction,
     onPermissionDecision,
@@ -134,7 +151,11 @@ export function ChatThemeProvider(props: ChatThemeProviderProps) {
     () => ({
       locale: typeof locale === 'string' ? (locales[locale] ?? zhCN) : locale,
       density,
+      // The two registries are flattened into one here rather than at every read site, so
+      // no component downstream has to know that the deprecated shape ever existed.
+      tools: mergeToolRegistries(toolRenderers, tools),
       toolRenderers: toolRenderers ?? {},
+      toolVariant,
       a2uiRegistry: a2uiRegistry ?? {},
       onA2UIAction,
       onPermissionDecision,
@@ -148,7 +169,9 @@ export function ChatThemeProvider(props: ChatThemeProviderProps) {
     [
       locale,
       density,
+      tools,
       toolRenderers,
+      toolVariant,
       a2uiRegistry,
       onA2UIAction,
       onPermissionDecision,
@@ -181,4 +204,22 @@ export function ChatThemeProvider(props: ChatThemeProviderProps) {
       </div>
     </ChatThemeContext.Provider>
   )
+}
+
+/**
+ * Folds the deprecated `toolRenderers` map into the `tools` registry.
+ *
+ * A bare renderer is exactly a definition whose only field is `render`, so the old prop
+ * survives as sugar rather than as a second code path. `tools` wins on collision: a host
+ * mid-migration has the new registration as the one it just wrote.
+ */
+function mergeToolRegistries(
+  renderers: Record<string, ToolRenderer> | undefined,
+  definitions: Record<string, ToolDefinition> | undefined,
+): Record<string, ToolDefinition> {
+  if (!renderers) return definitions ?? {}
+
+  const merged: Record<string, ToolDefinition> = {}
+  for (const [name, render] of Object.entries(renderers)) merged[name] = { render }
+  return definitions ? { ...merged, ...definitions } : merged
 }
