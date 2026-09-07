@@ -388,3 +388,90 @@ export const QuoteIcon = (props: IconProps) => (
     <path d="M19 6.5c-3 1.1-4.5 3.5-4.5 6.7 0 2.4 1.3 4.3 3.4 4.3 1.8 0 3.1-1.3 3.1-3.1 0-1.7-1.2-2.9-2.8-2.9-.3 0-.6 0-.8.1.4-1.6 1.5-2.8 3.1-3.5Z" />
   </Icon>
 )
+
+export const ChevronLeftIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="m14.5 5-7 7 7 7" />
+  </Icon>
+)
+
+export const ZoomInIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <circle cx="10.5" cy="10.5" r="6.5" />
+    <path d="M20 20l-4.8-4.8M10.5 7.8v5.4M7.8 10.5h5.4" />
+  </Icon>
+)
+
+export const ZoomOutIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <circle cx="10.5" cy="10.5" r="6.5" />
+    <path d="M20 20l-4.8-4.8M7.8 10.5h5.4" />
+  </Icon>
+)
+
+/** "Fit to view" — four corners pulling inwards. */
+export const FitIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9" />
+    <path d="M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15" />
+  </Icon>
+)
+
+export const DownloadIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M12 4v11M8 11.5l4 4 4-4" />
+    <path d="M4.5 17.5v1A2.5 2.5 0 0 0 7 21h10a2.5 2.5 0 0 0 2.5-2.5v-1" />
+  </Icon>
+)
+
+export const FolderIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M3.5 6.5A2 2 0 0 1 5.5 4.5h3.2c.6 0 1.2.3 1.6.8l1 1.2h7.2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z" />
+  </Icon>
+)
+
+export const FolderOpenIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M3.5 18.5v-12a2 2 0 0 1 2-2h3.2c.6 0 1.2.3 1.6.8l1 1.2h5.2a2 2 0 0 1 2 2v1.5" />
+    <path d="m3.5 18.5 2.3-6.2a1.5 1.5 0 0 1 1.4-1h13a1.1 1.1 0 0 1 1 1.5l-2 5.6a1.5 1.5 0 0 1-1.4 1H5.5a2 2 0 0 1-2-1Z" />
+  </Icon>
+)
+
+/** Angle brackets — the "show me the source" toggle. */
+export const CodeIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="m8.5 8-4.5 4 4.5 4M15.5 8l4.5 4-4.5 4" />
+  </Icon>
+)
+
+/** The other half of that toggle: back to the rendered view. */
+export const EyeIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
+    <circle cx="12" cy="12" r="2.75" />
+  </Icon>
+)
+
+/** A grid, for the spreadsheet preview and its sheet tabs. */
+export const TableIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <rect x="3.5" y="4.5" width="17" height="15" rx="2" />
+    <path d="M3.5 9.5h17M9.5 9.5V19.5" />
+  </Icon>
+)
+
+/** A page with a fold — the generic document preview. */
+export const DocumentIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M13.5 3.5H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9Z" />
+    <path d="M13.5 3.5V9H19M8.5 13h7M8.5 16.5h4.5" />
+  </Icon>
+)
+
+/** A 16:9 frame — the slide deck, which we only ever show as host-converted artefacts. */
+export const SlidesIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <rect x="3.5" y="4.5" width="17" height="11" rx="2" />
+    <path d="M12 15.5V19M9 19h6" />
+  </Icon>
+)

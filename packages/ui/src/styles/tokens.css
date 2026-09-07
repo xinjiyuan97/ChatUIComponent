@@ -25,6 +25,13 @@
   --color-cc-subtle: oklch(0.963 0.005 85);
   /* One step further down, for nested blocks inside an already-subtle container. */
   --color-cc-sunken: oklch(0.945 0.006 85);
+  /* The page of a document being previewed — a PDF page, a .docx page, a sandboxed HTML
+   * file. Deliberately *not* themed: those documents were authored against white, and
+   * darkening only the paper while their own black text stays black makes them unreadable.
+   * A host that ships a dark-mode document pipeline can override this one variable. */
+  --color-cc-paper: oklch(1 0 0);
+  /* What the paper sits on, so a page edge is visible against it. */
+  --color-cc-paper-canvas: oklch(0.93 0.005 85);
 
   /* ---------------------------------------------------------------- text */
   --color-cc-fg: oklch(0.24 0.008 75);
@@ -120,6 +127,10 @@
   --color-cc-surface: oklch(0.222 0.006 75);
   --color-cc-subtle: oklch(0.262 0.007 78);
   --color-cc-sunken: oklch(0.243 0.006 78);
+
+  /* `--color-cc-paper` stays white here on purpose — see its definition above. Only the
+   * surround darkens, which is also what keeps the page edge readable. */
+  --color-cc-paper-canvas: oklch(0.152 0.005 75);
 
   --color-cc-fg: oklch(0.938 0.004 85);
   --color-cc-muted: oklch(0.688 0.008 85);
@@ -312,6 +323,28 @@
   text-align: right;
   color: var(--color-cc-faint);
   user-select: none;
+}
+
+/*
+ * The .docx viewer's surround.
+ *
+ * `docx-preview` injects its own stylesheet at render time, and it ships a literal
+ * `background: gray` for the canvas plus a hard black box-shadow on the page. Both are
+ * scoped to `.cc-docx*` so nothing escapes into the host, but inside the panel they sit
+ * next to the PDF viewer and have to agree with it — a grey slab beside a themed one reads
+ * as a bug. Only the surround is re-stated here; the document's own typography is left
+ * exactly as the file specifies it.
+ *
+ * The selectors are doubled to raise specificity. That library's `<style>` is appended into
+ * the component's DOM, so it comes after this file in document order and wins any tie.
+ */
+.cc-docx-wrapper.cc-docx-wrapper {
+  background: var(--color-cc-paper-canvas);
+}
+
+.cc-docx-wrapper.cc-docx-wrapper > section.cc-docx {
+  background: var(--color-cc-paper);
+  box-shadow: var(--shadow-cc-card);
 }
 
 /*

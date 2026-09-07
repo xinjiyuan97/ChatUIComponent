@@ -168,6 +168,53 @@ export type ChatLocale = {
   /** Subtitle on a flattened search result, naming its owning agent. */
   inAgent: (name: string) => string
 
+  sidePanel: string
+  closePanel: string
+  closeAllPanels: string
+  resizePanel: string
+  /** Shown when nothing is registered for an item's `kind`. */
+  panelUnavailable: (kind: string) => string
+
+  /* File preview. Every `previewCannot*` string is a *neutral* statement of fact, not an
+   * error: none of these situations is the agent failing at something. */
+  previewLoading: string
+  previewRetry: string
+  previewDownload: string
+  previewOpenExternal: string
+  previewSource: string
+  previewRendered: string
+  previewCopy: string
+  previewCopied: string
+  previewZoomIn: string
+  previewZoomOut: string
+  previewActualSize: string
+  previewFit: string
+  previewPreviousPage: string
+  previewNextPage: string
+  previewPageOf: (total: number) => string
+  previewFitWidth: string
+  previewSheets: string
+  /** Row cap on a very large spreadsheet. */
+  previewRowsTruncated: (shown: number, total: number) => string
+  previewUnsupported: (extension: string) => string
+  /** The optional peer dependency this format needs is not installed. */
+  previewRendererMissing: (packageName: string) => string
+  previewNeedsConfig: string
+  previewPdfWorkerHint: string
+  previewTooLarge: (size: string, max: string) => string
+  previewFetchFailed: string
+  previewRenderFailed: string
+  /** ppt: we do not parse it, the host converts it first. */
+  previewConvertedArtifactMissing: string
+
+  fileTree: string
+  fileTreeEmpty: string
+  fileTreeLoadFailed: string
+  /** Right-hand side of a folder panel, before a file has been chosen. */
+  fileTreeSelectHint: string
+  /** Narrow folder panel: back from a file to the tree. */
+  fileTreeBack: string
+
   a2uiUnknownComponent: (type: string) => string
   a2uiTruncated: string
   a2uiError: string
@@ -322,6 +369,45 @@ export const zhCN: ChatLocale = {
   newChatIn: (name) => `在 ${name} 下新建对话`,
   inAgent: (name) => `属于 ${name}`,
 
+  sidePanel: '侧边面板',
+  closePanel: '关闭',
+  closeAllPanels: '全部关闭',
+  resizePanel: '调整面板宽度',
+  panelUnavailable: (kind) => `没有为「${kind}」注册渲染器`,
+
+  previewLoading: '加载中',
+  previewRetry: '重试',
+  previewDownload: '下载',
+  previewOpenExternal: '在新标签页打开',
+  previewSource: '原文',
+  previewRendered: '预览',
+  previewCopy: '复制',
+  previewCopied: '已复制',
+  previewZoomIn: '放大',
+  previewZoomOut: '缩小',
+  previewActualSize: '实际大小',
+  previewFit: '适应窗口',
+  previewPreviousPage: '上一页',
+  previewNextPage: '下一页',
+  previewPageOf: (total) => `共 ${total} 页`,
+  previewFitWidth: '适应宽度',
+  previewSheets: '工作表',
+  previewRowsTruncated: (shown, total) => `仅显示前 ${shown} 行，共 ${total} 行`,
+  previewUnsupported: (extension) => (extension ? `暂不支持预览 .${extension} 文件` : '暂不支持预览这种文件'),
+  previewRendererMissing: (packageName) => `预览这种文件需要安装 ${packageName}`,
+  previewNeedsConfig: 'PDF 预览需要先配置 worker',
+  previewPdfWorkerHint: '把 pdfjs-dist 的 worker 地址传给 ChatThemeProvider 的 pdfWorkerSrc',
+  previewTooLarge: (size, max) => `文件 ${size}，超过预览上限 ${max}`,
+  previewFetchFailed: '无法加载文件',
+  previewRenderFailed: '无法解析这个文件',
+  previewConvertedArtifactMissing: '幻灯片需要先在服务端转换成 PDF 或图片',
+
+  fileTree: '文件树',
+  fileTreeEmpty: '这个目录是空的',
+  fileTreeLoadFailed: '加载失败，点击重试',
+  fileTreeSelectHint: '选择左侧的文件查看预览',
+  fileTreeBack: '返回文件树',
+
   a2uiUnknownComponent: (type) => `未注册的组件：${type}`,
   a2uiTruncated: '内容过长，已截断显示',
   a2uiError: '此卡片渲染失败',
@@ -475,6 +561,46 @@ export const enUS: ChatLocale = {
   expandAgent: (name) => `Expand ${name}`,
   newChatIn: (name) => `New chat in ${name}`,
   inAgent: (name) => `in ${name}`,
+
+  sidePanel: 'Side panel',
+  closePanel: 'Close',
+  closeAllPanels: 'Close all',
+  resizePanel: 'Resize panel',
+  panelUnavailable: (kind) => `No renderer registered for “${kind}”`,
+
+  previewLoading: 'Loading',
+  previewRetry: 'Retry',
+  previewDownload: 'Download',
+  previewOpenExternal: 'Open in new tab',
+  previewSource: 'Source',
+  previewRendered: 'Preview',
+  previewCopy: 'Copy',
+  previewCopied: 'Copied',
+  previewZoomIn: 'Zoom in',
+  previewZoomOut: 'Zoom out',
+  previewActualSize: 'Actual size',
+  previewFit: 'Fit to view',
+  previewPreviousPage: 'Previous page',
+  previewNextPage: 'Next page',
+  previewPageOf: (total) => `of ${total}`,
+  previewFitWidth: 'Fit width',
+  previewSheets: 'Sheets',
+  previewRowsTruncated: (shown, total) => `Showing the first ${shown} of ${total} rows`,
+  previewUnsupported: (extension) =>
+    extension ? `No preview for .${extension} files` : 'No preview for this kind of file',
+  previewRendererMissing: (packageName) => `Previewing this format needs ${packageName} installed`,
+  previewNeedsConfig: 'The PDF preview needs a worker configured first',
+  previewPdfWorkerHint: "Pass pdfjs-dist's worker URL as ChatThemeProvider's pdfWorkerSrc",
+  previewTooLarge: (size, max) => `The file is ${size}, over the ${max} preview limit`,
+  previewFetchFailed: 'Could not load the file',
+  previewRenderFailed: 'Could not make sense of this file',
+  previewConvertedArtifactMissing: 'Slides need converting to PDF or images on the server first',
+
+  fileTree: 'Files',
+  fileTreeEmpty: 'This folder is empty',
+  fileTreeLoadFailed: 'Could not load — click to retry',
+  fileTreeSelectHint: 'Select a file to preview it',
+  fileTreeBack: 'Back to files',
 
   a2uiUnknownComponent: (type) => `Unregistered component: ${type}`,
   a2uiTruncated: 'Content was truncated',

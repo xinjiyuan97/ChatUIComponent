@@ -307,6 +307,7 @@ pnpm add mermaid
 - 源码长度（20k 字符）和边数（300）都有上限。Mermaid 的布局是**同步**的，一张跑飞的图不是渲染得难看，是整个标签页卡死。
 - 明暗切换会重新渲染。Mermaid 把颜色烤进 SVG，没法像 Shiki 那样一次输出两套 CSS 变量。
 - 不想要就 `<ChatThemeProvider mermaid={false}>`，这样连渲染器都不会被 import。
+- **不装的话，记得在打包器里把它标成 external**，否则构建会挂在解析不到 `mermaid` 上 —— 见[可选依赖与打包器](#右侧面板与文件预览)那节，预览的三个可选 peer 是同一回事。
 
 ---
 
@@ -465,6 +466,159 @@ import { defaultA2UIRegistry } from '@xinjiyuan97/chat-ui/a2ui-registry'
 - props 会被过滤：`dangerouslySetInnerHTML`、`on*` 字符串处理器、`javascript:` 和 `data:text/html` 链接在到达组件之前就被剥掉。
 - 未注册的 `type` 走 fallback，组件抛错被 ErrorBoundary 拦在 surface 内 —— 一张坏卡片不该带走整条消息。
 - 默认组件集里**没有任何能导航、发请求或执行代码的东西**。往 registry 里加组件，等于把那个能力交给模型输出，加之前先想清楚。
+
+---
+
+## 右侧面板与文件预览
+
+`ChatWorkspace` 是三栏外壳，右边那栏是 `SidePanel`。**右栏不知道自己在显示什么** —— 每个面板项只带一个不透明的 `kind` 和一坨 `data`，由注册表决定谁来画。文件预览只是其中一个 kind，所以同一根柱子以后放 diff、放运行日志、放设置面板，`SidePanel` 一行都不用改。
+
+因此注册表是**两层**的：
+
+```
+SidePanel(kind 注册表) → kind: 'file' → FilePreview → previews(文件类型注册表) → 渲染器
+                                                                    ↘ 没匹配上 → UnsupportedPreview
+```
+
+接起来一共两行：
+
+```tsx
+import { ChatWorkspace, SidePanel, filePreviewPanel, folderPanel } from '@xinjiyuan97/chat-ui'
+import { useSidePanel } from '@xinjiyuan97/chat-core'
+
+const panel = useSidePanel()
+
+<ChatThemeProvider panels={{ file: filePreviewPanel, folder: folderPanel }}>
+  <ChatWorkspace side={<ConversationSidebar … />} panel={<SidePanel panel={panel} />}>
+    …
+  </ChatWorkspace>
+</ChatThemeProvider>
+
+// 打开一个文件
+panel.open({ id: path, kind: 'file', title: name, data: { file: { name, url } } })
+// 打开一整个文件夹，左树右预览
+panel.open({ id: repo, kind: 'folder', title: repo, data: { nodes } })
+```
+
+一个 `PreviewFile` 有三种给内容的方式，给哪种用哪种：`content`（已经在内存里）、`url`（远程地址）、`load()`（要用的时候才去取 —— 大文件不该在开标签的瞬间就下载）。
+
+### 开箱支持的格式
+
+| 类型 | 后缀 | 靠什么 | 说明 |
+| --- | --- | --- | --- |
+| PDF | `.pdf` | `pdfjs-dist`（可选 peer） | 翻页、跳页、缩放、适应宽度；只渲染视口附近的页 |
+| 图片 | `.png` `.jpg` `.gif` `.webp` `.avif` `.svg` … | 无 | 滚轮缩放（锚在指针处）、拖拽平移、双击复位 |
+| Markdown | `.md` `.markdown` `.mdx` | 无 | 渲染 / 原文切换 |
+| HTML | `.html` `.htm` | 无 | 无脚本 sandbox iframe，见下 |
+| 文本与代码 | `.txt` `.log` `.json` `.yaml` 及约 90 种源码后缀 | 无 | 复用消息里那套 Shiki 高亮 |
+| Word | `.docx` | `docx-preview`（可选 peer） | 带前缀隔离，样式不外漏 |
+| Excel | `.xlsx` `.xlsm` | `exceljs`（可选 peer） | 只用它解析，表格是我们自己用 token 画的 |
+| 幻灯片 | `.pptx` `.ppt` | —— | **不解析**，只显示宿主转好的产物，见下 |
+
+三个可选 peer 装了才有：
+
+```bash
+pnpm add pdfjs-dist docx-preview exceljs   # 按需，三个都是独立的
+```
+
+**没装不是错误**，是兜底页里的一句「预览这种文件需要安装 X」加一条 `pnpm add`。运行时一个都没装也照常工作 —— 渲染器的 `import()` 失败被吞掉，落到兜底页。
+
+但**打包器需要你告诉它这些依赖是可选的**。渲染器里是 `import('exceljs')` 这种静态可分析的裸标识符，Rollup / webpack 解析不到就直接把构建判失败（Vite 的报错原文是 `Rollup failed to resolve import "exceljs"`）。一行配置的事，同一份名单也适用于 `mermaid`：
+
+```ts
+// vite.config.ts —— 只列你没装的那几个
+export default defineConfig({
+  build: { rollupOptions: { external: ['pdfjs-dist', 'docx-preview', 'exceljs', 'mermaid'] } },
+})
+```
+
+```js
+// next.config.js / webpack
+config.externals.push('pdfjs-dist', 'docx-preview', 'exceljs', 'mermaid')
+```
+
+配好之后构建通过，运行时那个 `import()` 解析不到裸标识符、被 `.catch` 接住，页面上就是兜底页，控制台干净。**装了的那几个不要列进去**，列了就永远走兜底页。
+
+### PDF 需要宿主给 worker
+
+pdf.js 的解析跑在 Web Worker 里，worker 文件的地址只有宿主的构建工具知道。我们**不去猜、也不打 CDN**：内网离线部署会静默失败，版本对不上时 pdf.js 报的错基本没法自查。所以要求传一个 `pdfWorkerSrc`，不传就是兜底页里的「PDF 预览需要先配置 worker」加下面这段片段。
+
+```tsx
+// Vite
+import pdfWorkerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
+
+// Next.js（把 worker 复制到 public/ 之后）
+const pdfWorkerSrc = '/pdf.worker.min.mjs'
+
+<ChatThemeProvider pdfWorkerSrc={pdfWorkerSrc}>
+```
+
+### .pptx 只吃转换产物
+
+一份 deck 是绝对定位的形状、主题继承、内嵌字体、SmartArt 和动画。目前没有保真度可接受的纯前端 pptx 渲染器 —— 文字会跑到它本该所属的形状之外，而读者没有任何办法判断自己看到的是不是错的。**安静地错比不显示更糟**，所以我们不做这件事。
+
+宿主在服务端用 LibreOffice 之类转好之后，挂在 `converted` 上：
+
+```ts
+const file: PreviewFile = {
+  name: '发布评审.pptx',
+  converted: { kind: 'pdf', file: { name: '发布评审.pdf', url: '/converted/review.pdf' } },
+  // 或者逐页图片：{ kind: 'images', pages: [{ name: '1.png', url: … }, …] }
+}
+```
+
+不给就落到兜底页，明说需要服务端转换。
+
+### ⚠️ HTML 预览是无脚本的 sandbox iframe
+
+`.html` 的渲染走 `<iframe srcdoc sandbox="">` —— **空 sandbox，`allow-scripts` 是刻意不给的**。文件是 agent 输出，直接内联到宿主 DOM 里意味着：一个 `<script>` 就带着宿主的 cookie 和 origin 跑起来了，一条 `position: fixed` 就盖在聊天界面上了，这两件事都不是转义字符串能解决的。
+
+sandbox 之后，脚本不跑、`javascript:` 不解析、表单不提交、frame 不能导航顶层窗口，而且拿到不透明源、碰不到宿主的 storage 和 DOM。这些全部由浏览器强制。
+
+**所以这里没有 DOMPurify。** sanitizer 是一份要追着新绕过手法跑的黑名单，sandbox 是引擎级的能力开关。代价是带脚本的文档（图表、交互报表）会渲染成静态版本 —— 对一个预览面板来说这个取舍是对的。
+
+### 注册自己的预览类型
+
+一个 `previews` prop 就够了：
+
+```tsx
+import { ChatThemeProvider, definePreview, TableIcon } from '@xinjiyuan97/chat-ui'
+
+const previews = {
+  // 新增一种内置完全不认识的格式
+  ndjson: definePreview({
+    extensions: ['ndjson', 'jsonl'],
+    mediaTypes: ['application/x-ndjson'],
+    icon: TableIcon,
+    render: ({ file, close }) => <MyLogTable file={file} onClose={close} />,
+  }),
+
+  // 覆盖内置的 markdown 渲染器 —— 没有反注册这一步
+  markdown: definePreview({ extensions: ['md', 'markdown'], render: MyMarkdown }),
+}
+
+<ChatThemeProvider previews={previews} panels={{ file: filePreviewPanel }}>
+```
+
+匹配顺序就是全部的规则：**宿主的精确 mediaType → 宿主的后缀 → 宿主的 mediaType 通配（`image/*`）→ 内置的同样三轮 → 都没有则兜底页**。宿主的条目天然排在内置前面，所以「换掉我们的某个渲染器」和「加一种新格式」是同一件事。
+
+匹配是声明式的 `extensions` / `mediaTypes`，不是 `match(file) => boolean`：一个不透明的谓词无法排序、无法解释「凭什么是它接管了」，也没法变成上面那张支持格式表。文件树的图标也从这张注册表里取，新注册的格式在树里自动就是它自己的图标，没有第二份列表要维护。
+
+想整个换掉内置那批，`BUILTIN_PREVIEWS` 是导出的，可以挑一个出来复用（`BUILTIN_PREVIEWS.markdown.render`），也可以完全不要。
+
+### 兜底页
+
+不支持的类型不是「无法预览」四个字。七种原因各有各的说法和各自的按钮，因为少一个可选依赖是一条 `pnpm add` 能解决的，缺 worker 是一个 prop，文件太大是改成下载 —— 塞进同一句话就把唯一有用的部分丢掉了：
+
+`unsupported-type` · `renderer-missing` · `needs-config` · `too-large` · `fetch-failed` · `render-failed` · `converted-artifact-missing`
+
+**一处危险红都没有。** 红色留给 agent 真的失败了的时候；渲染不了 `.psd` 是一个不渲染 Photoshop 文件的库的正常状态，把它画成红的只会教用户不信任这个颜色。渲染器抛错也被 error boundary 拦在面板里 —— 一个坏 xlsx 不该带走整个聊天页面。
+
+### 文件树
+
+`FileTree` 是 `useFileTree` 的皮，`FolderPreview` 把它和预览拼成左树右预览（面板窄于 480px 时自动变成「树 → 点开进详情 → 返回」的两级）。省略 `children` 表示「还没加载」，配合 `onExpand` 做懒加载；给空数组才表示「确实是空目录」。
+
+**整棵树只有一个 tab 停靠点**（roving tabindex）—— 四百个文件挨个 tab 过去不叫导航。进树以后 ↑↓ 移动、→ 展开或进入第一个子节点、← 折叠或回到父节点、Home/End 跳两端、Enter 打开。键盘导航只走已渲染的行，光标不会掉进折叠起来的子树里。
 
 ---
 

@@ -17,6 +17,8 @@ export * from './icons'
 export * from './provider/ChatThemeProvider'
 export * from './provider/locale'
 export * from './provider/tools'
+export * from './provider/panels'
+export * from './provider/previews'
 
 export * from './primitives/Button'
 export * from './primitives/IconButton'
@@ -26,6 +28,8 @@ export * from './primitives/ImageSkeleton'
 
 export * from './layout/ChatContainer'
 export * from './layout/ChatDock'
+export * from './layout/ChatWorkspace'
+export * from './layout/SidePanel'
 
 export * from './message/Message'
 export * from './message/MessageContent'
@@ -71,3 +75,25 @@ export * from './conversation/ConversationSidebar'
 export * from './conversation/ConversationList'
 export * from './conversation/ConversationItem'
 export * from './conversation/AgentGroup'
+
+/* File preview. The entry points are `filePreviewPanel` / `folderPanel` — one line each to
+ * hang the file-type registry off the panel-kind registry. Everything below them is exported
+ * too, because a host that wants only the viewer (in a modal, a route, a split pane) should
+ * not have to open a side panel to get one. */
+export * from './preview/FilePreview'
+export * from './preview/FileTree'
+export * from './preview/FolderPreview'
+export * from './preview/UnsupportedPreview'
+export * from './preview/registry'
+export * from './preview/PreviewFrame'
+export * from './preview/PreviewLoader'
+export * from './preview/download'
+
+export * from './preview/TextPreview'
+export * from './preview/MarkdownPreview'
+export * from './preview/HtmlPreview'
+export * from './preview/ImagePreview'
+export * from './preview/PdfPreview'
+export * from './preview/WordPreview'
+export * from './preview/ExcelPreview'
+export * from './preview/SlidesPreview'

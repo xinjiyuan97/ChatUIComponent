@@ -9,6 +9,8 @@ import { cn } from '../lib/cn'
  * `useChatTheme` from here at runtime. */
 import type { CodeRunner } from '../markdown/CodeBlock'
 import { locales, zhCN, type ChatLocale, type LocaleName } from './locale'
+import type { PanelDefinition, PanelRegistry } from './panels'
+import type { PreviewRegistry } from './previews'
 import type { ToolDefinition, ToolRenderer, ToolVariant } from './tools'
 
 export type Density = 'comfortable' | 'compact'
@@ -27,6 +29,21 @@ export type ChatThemeContextValue = {
   toolRenderers: Record<string, ToolRenderer>
   /** Layout for tool calls that do not set `compact` themselves. */
   toolVariant: ToolVariant
+  /** What draws each `kind` of side-panel item. Keyed by `SidePanelItem.kind`. */
+  panels: PanelRegistry
+  /**
+   * Host-registered file previews. Read through `usePreviewDefinition`, which falls back to
+   * the built-ins — so this holds only what the host added, and entries here win.
+   */
+  previews: PreviewRegistry
+  /**
+   * URL of the `pdfjs-dist` worker. Without it there is no PDF preview.
+   *
+   * Deliberately not defaulted to a CDN: an intranet or air-gapped deployment would fail
+   * silently, and a worker whose version does not match the installed `pdfjs-dist` produces
+   * an error nobody can diagnose from the message. Better to say what is missing.
+   */
+  pdfWorkerSrc?: string
   a2uiRegistry: A2UIRegistry
   onA2UIAction?: (action: A2UIAction, message: ChatMessage) => void
   /**
@@ -62,6 +79,8 @@ const FALLBACK: ChatThemeContextValue = {
   tools: {},
   toolRenderers: {},
   toolVariant: 'default',
+  panels: {},
+  previews: {},
   a2uiRegistry: {},
   codeThemes: { light: 'github-light', dark: 'github-dark' },
   mermaid: true,
@@ -87,6 +106,17 @@ export function useToolDefinition(name: string): ToolDefinition | undefined {
   return useChatTheme().tools[name]
 }
 
+/**
+ * What draws one `kind` of side-panel item, if anything is registered for it.
+ *
+ * An unregistered kind is a normal outcome, not a bug: what ends up in the side panel is
+ * driven by agent output, so the shell has to be able to say "nothing here knows how to
+ * show this" without taking the page down.
+ */
+export function usePanelDefinition(kind: string): PanelDefinition | undefined {
+  return useChatTheme().panels[kind]
+}
+
 export type ChatThemeProviderProps = {
   children: ReactNode
   locale?: LocaleName | ChatLocale
@@ -105,6 +135,24 @@ export type ChatThemeProviderProps = {
    * in or out via their `ToolDefinition`.
    */
   toolVariant?: ToolVariant
+  /**
+   * What draws each `kind` of side-panel item, keyed by `SidePanelItem.kind`.
+   *
+   * `SidePanel` looks everything up here, which is the whole reason the right-hand column
+   * is not a file-preview component: registering a kind is how anything else — a diff, a
+   * run log, a settings pane — gets to live there too.
+   */
+  panels?: PanelRegistry
+  /**
+   * Extra file previews, or replacements for the built-in ones.
+   *
+   * Entries here are consulted before the built-ins, so swapping our markdown viewer for
+   * your own needs no unregistration — just claim `extensions: ['md']`. See
+   * `resolvePreview` for the exact order.
+   */
+  previews?: PreviewRegistry
+  /** URL of the `pdfjs-dist` worker. Required for the PDF preview; there is no default. */
+  pdfWorkerSrc?: string
   a2uiRegistry?: A2UIRegistry
   onA2UIAction?: (action: A2UIAction, message: ChatMessage) => void
   onPermissionDecision?: (resolution: PermissionResolution, message: ChatMessage) => void
@@ -134,6 +182,9 @@ export function ChatThemeProvider(props: ChatThemeProviderProps) {
     tools,
     toolRenderers,
     toolVariant = 'default',
+    panels,
+    previews,
+    pdfWorkerSrc,
     a2uiRegistry,
     onA2UIAction,
     onPermissionDecision,
@@ -156,6 +207,9 @@ export function ChatThemeProvider(props: ChatThemeProviderProps) {
       tools: mergeToolRegistries(toolRenderers, tools),
       toolRenderers: toolRenderers ?? {},
       toolVariant,
+      panels: panels ?? {},
+      previews: previews ?? {},
+      pdfWorkerSrc,
       a2uiRegistry: a2uiRegistry ?? {},
       onA2UIAction,
       onPermissionDecision,
@@ -172,6 +226,9 @@ export function ChatThemeProvider(props: ChatThemeProviderProps) {
       tools,
       toolRenderers,
       toolVariant,
+      panels,
+      previews,
+      pdfWorkerSrc,
       a2uiRegistry,
       onA2UIAction,
       onPermissionDecision,

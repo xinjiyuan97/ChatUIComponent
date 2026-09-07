@@ -10,9 +10,19 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   /* No `treeshake`: tsup's Rollup pass strips the `"use client"` banner below. */
-  /* `mermaid` is an optional peer: listing it here keeps the dynamic import in the output
-   * as an import, so a consumer who never installs it never resolves it either. */
-  external: ['react', 'react-dom', 'mermaid', '@xinjiyuan97/chat-core', '@xinjiyuan97/chat-a2ui'],
+  /* The optional peers are listed here so their dynamic imports stay imports in the output:
+   * a consumer who never installs `pdfjs-dist` never resolves it either, and the preview
+   * falls back to its "install this to preview PDFs" page instead of failing to build. */
+  external: [
+    'react',
+    'react-dom',
+    'mermaid',
+    'pdfjs-dist',
+    'docx-preview',
+    'exceljs',
+    '@xinjiyuan97/chat-core',
+    '@xinjiyuan97/chat-a2ui',
+  ],
   // Everything renders interactively; marking the whole bundle keeps Next.js App Router
   // consumers from having to wrap each import themselves.
   banner: { js: '"use client";' },
