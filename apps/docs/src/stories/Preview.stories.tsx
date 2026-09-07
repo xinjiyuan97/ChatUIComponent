@@ -32,7 +32,7 @@ const meta = {
     docs: {
       description: {
         component:
-          '右侧面板里的**文件预览**。\n\n注册表是**两层**的，这是整块设计的核心：`SidePanel` 那层只认不透明的 `kind`（`diff`、`log`、`settings`…），完全不知道「文件」是什么；其中一个 kind 交给 `filePreviewPanel`，才轮到第二层按**文件类型**去挑渲染器。两层各自可扩展 —— 宿主既可以加一个全新的 kind，也可以只往 `previews` 里塞一种格式。\n\n```\nSidePanel(kind) → filePreviewPanel → previews(文件类型) → 渲染器\n                                                     ↘ 没匹配上 → UnsupportedPreview\n```\n\n匹配顺序是：宿主的精确 mediaType → 宿主的后缀 → 宿主的 mediaType 通配 → 内置的同样三轮。**宿主永远赢内置**，所以覆盖我们的 markdown 渲染器只需要注册一条 `extensions: [\'md\']`，不用先反注册什么东西。\n\n三个重依赖（`pdfjs-dist` / `docx-preview` / `exceljs`）是 optional peer：没装不是错误，是兜底页的一个分支。',
+          "右侧面板里的**文件预览**。\n\n注册表是**两层**的，这是整块设计的核心：`SidePanel` 那层只认不透明的 `kind`（`diff`、`log`、`settings`…），完全不知道「文件」是什么；其中一个 kind 交给 `filePreviewPanel`，才轮到第二层按**文件类型**去挑渲染器。两层各自可扩展 —— 宿主既可以加一个全新的 kind，也可以只往 `previews` 里塞一种格式。\n\n```\nSidePanel(kind) → filePreviewPanel → previews(文件类型) → 渲染器\n                                                     ↘ 没匹配上 → UnsupportedPreview\n```\n\n匹配顺序是：宿主的精确 mediaType → 宿主的后缀 → 宿主的 mediaType 通配 → 内置的同样三轮。**宿主永远赢内置**，所以覆盖我们的 markdown 渲染器只需要注册一条 `extensions: ['md']`，不用先反注册什么东西。\n\n三个重依赖（`pdfjs-dist` / `docx-preview` / `exceljs`）是 optional peer：没装不是错误，是兜底页的一个分支。",
       },
     },
   },
@@ -78,7 +78,7 @@ export const Pdf: Story = {
     docs: {
       description: {
         story:
-          '四页 PDF。工具栏是翻页、跳页输入框、缩放、适应宽度、下载、新窗口打开。\n\n只渲染视口附近的页 —— 滚到第 20 页时前面的 canvas 已经被回收（`canvas.width = 0`），否则一个几百页的文档会把显存吃光。canvas 的实际像素尺寸乘了 `devicePixelRatio`，不然 retina 屏上文字发糊。\n\n**worker 必须由宿主给**：这个 story 用的是 `import src from \'pdfjs-dist/build/pdf.worker.min.mjs?url\'`。不传就是下面 `Fallback / needs-config` 那一页 —— 我们不偷偷打 CDN，内网部署会静默失败，版本不一致时 pdf.js 报的错也基本没法自查。',
+          "四页 PDF。工具栏是翻页、跳页输入框、缩放、适应宽度、下载、新窗口打开。\n\n只渲染视口附近的页 —— 滚到第 20 页时前面的 canvas 已经被回收（`canvas.width = 0`），否则一个几百页的文档会把显存吃光。canvas 的实际像素尺寸乘了 `devicePixelRatio`，不然 retina 屏上文字发糊。\n\n**worker 必须由宿主给**：这个 story 用的是 `import src from 'pdfjs-dist/build/pdf.worker.min.mjs?url'`。不传就是下面 `Fallback / needs-config` 那一页 —— 我们不偷偷打 CDN，内网部署会静默失败，版本不一致时 pdf.js 报的错也基本没法自查。",
       },
     },
   },
@@ -129,7 +129,7 @@ export const Html: Story = {
     docs: {
       description: {
         story:
-          '**这个 fixture 里塞了 `<script>alert(1)</script>` 和 `<img onerror=alert(1)>`，两个都不会执行。**\n\n渲染用的是 `<iframe srcdoc sandbox="">` —— 空 sandbox，`allow-scripts` 是刻意不给的。脚本不跑、`javascript:` 不解析、表单不提交、frame 不能导航顶层窗口，而且拿到的是不透明源，碰不到宿主的 storage 和 DOM。这些都是浏览器强制的，不是我们用正则删出来的。\n\n所以这里没有 DOMPurify：sanitizer 是一份要追着新绕过手法跑的黑名单，sandbox 是引擎级的能力开关。代价是带脚本的文档（图表、交互报表）会渲染成静态版本，对预览面板来说这个取舍是对的。\n\n开着 devtools 看这条 story，控制台会有一句 `Failed to execute \'postMessage\' … does not match the recipient window\'s origin (\'null\')`。那是 Storybook 的 a11y 插件（axe-core）想往每个 iframe 里注入检查脚本，被不透明源挡了回去 —— 恰好是这个沙箱该有的表现，不是组件的报错。',
+          "**这个 fixture 里塞了 `<script>alert(1)</script>` 和 `<img onerror=alert(1)>`，两个都不会执行。**\n\n渲染用的是 `<iframe srcdoc sandbox=\"\">` —— 空 sandbox，`allow-scripts` 是刻意不给的。脚本不跑、`javascript:` 不解析、表单不提交、frame 不能导航顶层窗口，而且拿到的是不透明源，碰不到宿主的 storage 和 DOM。这些都是浏览器强制的，不是我们用正则删出来的。\n\n所以这里没有 DOMPurify：sanitizer 是一份要追着新绕过手法跑的黑名单，sandbox 是引擎级的能力开关。代价是带脚本的文档（图表、交互报表）会渲染成静态版本，对预览面板来说这个取舍是对的。\n\n开着 devtools 看这条 story，控制台会有一句 `Failed to execute 'postMessage' … does not match the recipient window's origin ('null')`。那是 Storybook 的 a11y 插件（axe-core）想往每个 iframe 里注入检查脚本，被不透明源挡了回去 —— 恰好是这个沙箱该有的表现，不是组件的报错。",
       },
     },
   },
@@ -178,9 +178,19 @@ export const Slides: Story = {
 // Fallbacks
 // ---------------------------------------------------------------------------
 
-const FALLBACKS: { reason: PreviewFailure; file: PreviewFile; packageName?: string; maxBytes?: number; detail?: string }[] = [
+const FALLBACKS: {
+  reason: PreviewFailure
+  file: PreviewFile
+  packageName?: string
+  maxBytes?: number
+  detail?: string
+}[] = [
   { reason: 'unsupported-type', file: { name: '设计稿.psd', size: 18_400_000, url: '#' } },
-  { reason: 'renderer-missing', file: { name: '工程周报.docx', size: 24_100 }, packageName: 'docx-preview' },
+  {
+    reason: 'renderer-missing',
+    file: { name: '工程周报.docx', size: 24_100 },
+    packageName: 'docx-preview',
+  },
   { reason: 'needs-config', file: { name: '季度报告.pdf', size: 1_280_000 } },
   {
     reason: 'too-large',
@@ -197,7 +207,10 @@ const FALLBACKS: { reason: PreviewFailure; file: PreviewFile; packageName?: stri
     file: { name: '销售明细.xlsx', size: 91_000 },
     detail: "Invalid zip: can't find end of central directory",
   },
-  { reason: 'converted-artifact-missing', file: { name: '发布评审.pptx', size: 3_400_000, url: '#' } },
+  {
+    reason: 'converted-artifact-missing',
+    file: { name: '发布评审.pptx', size: 3_400_000, url: '#' },
+  },
 ]
 
 export const Fallbacks: Story = {
@@ -334,7 +347,7 @@ export const HostRegistration: Story = {
     docs: {
       description: {
         story:
-          '要求「宿主能二次开发自己的预览类型」在这里就是一个 `previews` prop：\n\n```tsx\nconst previews = {\n  ndjson: definePreview({\n    extensions: [\'ndjson\', \'jsonl\'],\n    icon: TableIcon,\n    render: ({ file }) => <YourTable text={String(file.content)} />,\n  }),\n  markdown: definePreview({ extensions: [\'md\'], render: YourMarkdown }),\n}\n\n<ChatThemeProvider previews={previews}>\n```\n\n左边那条注册了一种内置完全不认识的格式；右边那条**覆盖**了内置的 markdown 渲染器 —— 没有反注册这一步，宿主的条目在 `resolvePreview` 里天然排在内置前面。文件树的图标也跟着走注册表，所以新格式在树里自动就是它自己的图标，没有第二份列表要维护。\n\n匹配是声明式的 `extensions` / `mediaTypes`，不是 `match(file) => boolean`：一个不透明的谓词无法排序、无法解释「凭什么是它接管了」，也没法变成 README 里那张支持格式表。',
+          "要求「宿主能二次开发自己的预览类型」在这里就是一个 `previews` prop：\n\n```tsx\nconst previews = {\n  ndjson: definePreview({\n    extensions: ['ndjson', 'jsonl'],\n    icon: TableIcon,\n    render: ({ file }) => <YourTable text={String(file.content)} />,\n  }),\n  markdown: definePreview({ extensions: ['md'], render: YourMarkdown }),\n}\n\n<ChatThemeProvider previews={previews}>\n```\n\n左边那条注册了一种内置完全不认识的格式；右边那条**覆盖**了内置的 markdown 渲染器 —— 没有反注册这一步，宿主的条目在 `resolvePreview` 里天然排在内置前面。文件树的图标也跟着走注册表，所以新格式在树里自动就是它自己的图标，没有第二份列表要维护。\n\n匹配是声明式的 `extensions` / `mediaTypes`，不是 `match(file) => boolean`：一个不透明的谓词无法排序、无法解释「凭什么是它接管了」，也没法变成 README 里那张支持格式表。",
       },
     },
   },
@@ -427,7 +440,8 @@ function PanelDemo() {
     <div className="flex h-[680px]">
       <div className="flex min-w-0 flex-1 flex-col gap-3 p-6">
         <p className="text-cc-sm text-cc-muted">
-          面板里开的每一项都只是 <code className="font-mono">{'{ kind: \'file\', data: { file } }'}</code>
+          面板里开的每一项都只是{' '}
+          <code className="font-mono">{"{ kind: 'file', data: { file } }"}</code>
           —— 右栏认的是 kind，文件类型是下一层的事。
         </p>
         <div className="flex flex-wrap gap-2">
@@ -483,7 +497,7 @@ export const InPanel: Story = {
     docs: {
       description: {
         story:
-          '两层注册表接起来一共两行：\n\n```tsx\n<ChatThemeProvider panels={{ file: filePreviewPanel, folder: folderPanel }}>\npanel.open({ id: path, kind: \'file\', title: name, data: { file } })\n```\n\n`filePreviewPanel` 是个现成的 `PanelDefinition`，它做的唯一一件事就是把 `data.file` 交给第二层。`SidePanel` 依旧只认 `kind`，多种文件格式对它来说是同一个 kind，所以右栏以后放 diff、运行日志、设置面板，代码一行都不用动。',
+          "两层注册表接起来一共两行：\n\n```tsx\n<ChatThemeProvider panels={{ file: filePreviewPanel, folder: folderPanel }}>\npanel.open({ id: path, kind: 'file', title: name, data: { file } })\n```\n\n`filePreviewPanel` 是个现成的 `PanelDefinition`，它做的唯一一件事就是把 `data.file` 交给第二层。`SidePanel` 依旧只认 `kind`，多种文件格式对它来说是同一个 kind，所以右栏以后放 diff、运行日志、设置面板，代码一行都不用动。",
       },
     },
   },

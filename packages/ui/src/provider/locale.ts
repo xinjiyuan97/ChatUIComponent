@@ -393,7 +393,8 @@ export const zhCN: ChatLocale = {
   previewFitWidth: '适应宽度',
   previewSheets: '工作表',
   previewRowsTruncated: (shown, total) => `仅显示前 ${shown} 行，共 ${total} 行`,
-  previewUnsupported: (extension) => (extension ? `暂不支持预览 .${extension} 文件` : '暂不支持预览这种文件'),
+  previewUnsupported: (extension) =>
+    extension ? `暂不支持预览 .${extension} 文件` : '暂不支持预览这种文件',
   previewRendererMissing: (packageName) => `预览这种文件需要安装 ${packageName}`,
   previewNeedsConfig: 'PDF 预览需要先配置 worker',
   previewPdfWorkerHint: '把 pdfjs-dist 的 worker 地址传给 ChatThemeProvider 的 pdfWorkerSrc',

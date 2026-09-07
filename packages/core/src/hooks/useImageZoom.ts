@@ -187,7 +187,12 @@ export function useImageZoom(options: ImageZoomOptions = {}): ImageZoomControlle
       // here also avoids the alternative, which is silently converting the fit scale into a
       // free one and making the image jump the instant a drag begins.
       if (event.button !== 0 || fitted) return
-      drag.current = { x: event.clientX, y: event.clientY, offsetX: position.x, offsetY: position.y }
+      drag.current = {
+        x: event.clientX,
+        y: event.clientY,
+        offsetX: position.x,
+        offsetY: position.y,
+      }
       setPanning(true)
       try {
         event.currentTarget.setPointerCapture(event.pointerId)

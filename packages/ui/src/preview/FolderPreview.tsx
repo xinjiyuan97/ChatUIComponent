@@ -76,7 +76,10 @@ export function FolderPreview({
     <div ref={containerRef} className={cn('flex h-full min-h-0 bg-cc-canvas', className)}>
       {showTree && (
         <div
-          className={cn('flex min-h-0 flex-col', narrow ? 'flex-1' : 'shrink-0 border-r border-cc-border')}
+          className={cn(
+            'flex min-h-0 flex-col',
+            narrow ? 'flex-1' : 'shrink-0 border-r border-cc-border',
+          )}
           style={narrow ? undefined : { width: resize.width }}
         >
           <FileTree
@@ -145,10 +148,11 @@ export function FolderPreview({
  * panel.open({ id: path, kind: 'folder', title: name, data: { nodes } })
  * ```
  */
-export const folderPanel = definePanel<{ nodes: FileNode[]; onExpand?: UseFileTreeOptions['onExpand'] }>(
-  {
-    padded: false,
-    render: ({ item }) =>
-      item.data ? <FolderPreview nodes={item.data.nodes} onExpand={item.data.onExpand} /> : null,
-  },
-)
+export const folderPanel = definePanel<{
+  nodes: FileNode[]
+  onExpand?: UseFileTreeOptions['onExpand']
+}>({
+  padded: false,
+  render: ({ item }) =>
+    item.data ? <FolderPreview nodes={item.data.nodes} onExpand={item.data.onExpand} /> : null,
+})

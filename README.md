@@ -504,16 +504,16 @@ panel.open({ id: repo, kind: 'folder', title: repo, data: { nodes } })
 
 ### 开箱支持的格式
 
-| 类型 | 后缀 | 靠什么 | 说明 |
-| --- | --- | --- | --- |
-| PDF | `.pdf` | `pdfjs-dist`（可选 peer） | 翻页、跳页、缩放、适应宽度；只渲染视口附近的页 |
-| 图片 | `.png` `.jpg` `.gif` `.webp` `.avif` `.svg` … | 无 | 滚轮缩放（锚在指针处）、拖拽平移、双击复位 |
-| Markdown | `.md` `.markdown` `.mdx` | 无 | 渲染 / 原文切换 |
-| HTML | `.html` `.htm` | 无 | 无脚本 sandbox iframe，见下 |
-| 文本与代码 | `.txt` `.log` `.json` `.yaml` 及约 90 种源码后缀 | 无 | 复用消息里那套 Shiki 高亮 |
-| Word | `.docx` | `docx-preview`（可选 peer） | 带前缀隔离，样式不外漏 |
-| Excel | `.xlsx` `.xlsm` | `exceljs`（可选 peer） | 只用它解析，表格是我们自己用 token 画的 |
-| 幻灯片 | `.pptx` `.ppt` | —— | **不解析**，只显示宿主转好的产物，见下 |
+| 类型       | 后缀                                             | 靠什么                      | 说明                                           |
+| ---------- | ------------------------------------------------ | --------------------------- | ---------------------------------------------- |
+| PDF        | `.pdf`                                           | `pdfjs-dist`（可选 peer）   | 翻页、跳页、缩放、适应宽度；只渲染视口附近的页 |
+| 图片       | `.png` `.jpg` `.gif` `.webp` `.avif` `.svg` …    | 无                          | 滚轮缩放（锚在指针处）、拖拽平移、双击复位     |
+| Markdown   | `.md` `.markdown` `.mdx`                         | 无                          | 渲染 / 原文切换                                |
+| HTML       | `.html` `.htm`                                   | 无                          | 无脚本 sandbox iframe，见下                    |
+| 文本与代码 | `.txt` `.log` `.json` `.yaml` 及约 90 种源码后缀 | 无                          | 复用消息里那套 Shiki 高亮                      |
+| Word       | `.docx`                                          | `docx-preview`（可选 peer） | 带前缀隔离，样式不外漏                         |
+| Excel      | `.xlsx` `.xlsm`                                  | `exceljs`（可选 peer）      | 只用它解析，表格是我们自己用 token 画的        |
+| 幻灯片     | `.pptx` `.ppt`                                   | ——                          | **不解析**，只显示宿主转好的产物，见下         |
 
 三个可选 peer 装了才有：
 

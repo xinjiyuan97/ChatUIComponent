@@ -4,13 +4,7 @@ import { useFileTree, type FileNode, type UseFileTreeOptions } from '@xinjiyuan9
 import { useEffect, useRef, type ComponentType } from 'react'
 
 import { cn } from '../lib/cn'
-import {
-  ChevronRightIcon,
-  FileIcon,
-  FolderIcon,
-  FolderOpenIcon,
-  SpinnerIcon,
-} from '../icons'
+import { ChevronRightIcon, FileIcon, FolderIcon, FolderOpenIcon, SpinnerIcon } from '../icons'
 import { useLocale } from '../provider/ChatThemeProvider'
 import { resolvePreview, type PreviewRegistry } from '../provider/previews'
 import type { IconProps } from '../icons'
@@ -120,7 +114,10 @@ export function FileTree({ label, className, ...options }: FileTreeProps) {
                 ) : (
                   <ChevronRightIcon
                     size={12}
-                    className={cn('transition-transform duration-150 ease-cc', row.expanded && 'rotate-90')}
+                    className={cn(
+                      'transition-transform duration-150 ease-cc',
+                      row.expanded && 'rotate-90',
+                    )}
                   />
                 )}
               </button>

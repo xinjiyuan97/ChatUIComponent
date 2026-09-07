@@ -55,13 +55,13 @@ them is drawn in danger red. Same call as `ImagePart`: red means the agent faile
 and a library that does not render Photoshop files has not failed.
 
 **`FileTree` + `folderPanel`** put a folder in the panel and open a file on selection. One tab
-stop for the whole tree with roving `tabIndex`; navigation walks the *rendered* rows, so the
+stop for the whole tree with roving `tabIndex`; navigation walks the _rendered_ rows, so the
 cursor cannot end up inside a subtree you just collapsed. Indentation is `padding-inline-start`
 on the row rather than nested-list margins, so a long name in a deep path still gets the full row
 width. Directories can load on expand.
 
 **New in core:** `useFileContent` (one state machine over `content` / `url` / `load`, with byte
-caps checked before *and* after download, and in-flight requests aborted on file switch),
+caps checked before _and_ after download, and in-flight requests aborted on file switch),
 `useFileTree` (flattened visible rows plus the WAI-ARIA tree key map) and `useImageZoom`
 (anchored zoom, pan, fit).
 
