@@ -152,7 +152,9 @@ function formatCell(cell: ExcelCell): SheetCell {
     // most — a grid of `=SUM(B2:B9)` tells the reader nothing about the numbers.
     if ('result' in record) return formatCell({ value: record.result, numFmt: cell.numFmt })
     if ('richText' in record && Array.isArray(record.richText)) {
-      return { text: record.richText.map((run) => String((run as { text?: string }).text ?? '')).join('') }
+      return {
+        text: record.richText.map((run) => String((run as { text?: string }).text ?? '')).join(''),
+      }
     }
     if ('text' in record) return { text: String(record.text ?? '') }
     if ('hyperlink' in record) return { text: String(record.hyperlink ?? '') }

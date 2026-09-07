@@ -33,6 +33,7 @@ jobs:
       # Never version or publish a revision that has not passed the package checks.
       - run: pnpm typecheck
       - run: pnpm lint
+      - run: pnpm prettier --check "**/*.{ts,tsx,css,md,json}"
       - run: pnpm test
       - run: pnpm build
 

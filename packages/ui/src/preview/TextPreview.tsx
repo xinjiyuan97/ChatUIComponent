@@ -9,11 +9,7 @@ import { IconButton } from '../primitives/IconButton'
 import { canHighlight, highlight, resolveLanguage } from '../markdown/highlighter'
 import { useLocale } from '../provider/ChatThemeProvider'
 import { canDownload, downloadFile } from './download'
-import {
-  PreviewFrame,
-  PreviewToolbarLabel,
-  PreviewToolbarSpacer,
-} from './PreviewFrame'
+import { PreviewFrame, PreviewToolbarLabel, PreviewToolbarSpacer } from './PreviewFrame'
 import { PreviewLoader } from './PreviewLoader'
 
 export type TextPreviewProps = {
@@ -38,13 +34,7 @@ export type TextPreviewProps = {
  * disk does not. Plain text still renders on the first frame, so a large file is readable
  * before Shiki finishes.
  */
-export function TextPreview({
-  text,
-  language,
-  toolbar,
-  onDownload,
-  className,
-}: TextPreviewProps) {
+export function TextPreview({ text, language, toolbar, onDownload, className }: TextPreviewProps) {
   const locale = useLocale()
   const { copied, copy } = useCopyToClipboard()
   const [wrap, setWrap] = useState(false)

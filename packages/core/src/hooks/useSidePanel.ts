@@ -153,7 +153,10 @@ export function useSidePanel(options: UseSidePanelOptions = {}): SidePanelContro
     onOpenChange.current?.(isOpen)
   }, [isOpen])
 
-  const active = useMemo(() => items.find((item) => item.id === activeId) ?? null, [items, activeId])
+  const active = useMemo(
+    () => items.find((item) => item.id === activeId) ?? null,
+    [items, activeId],
+  )
 
   return useMemo(
     () => ({

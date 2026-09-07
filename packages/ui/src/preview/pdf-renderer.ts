@@ -40,7 +40,12 @@ export type PdfDocumentHandle = {
   /** CSS pixel size at scale 1, for laying out a page before it is drawn. */
   pageSize: (page: number) => Promise<PdfPageSize>
   /** Draws a 1-based page onto a canvas, sizing it for `scale` and the device ratio. */
-  renderPage: (page: number, canvas: HTMLCanvasElement, scale: number, ratio: number) => PdfRenderTask
+  renderPage: (
+    page: number,
+    canvas: HTMLCanvasElement,
+    scale: number,
+    ratio: number,
+  ) => PdfRenderTask
   destroy: () => void
 }
 
@@ -71,7 +76,10 @@ let modulePromise: Promise<PdfjsModule | null> | null = null
 async function load(): Promise<PdfjsModule | null> {
   if (!modulePromise) {
     modulePromise = import('pdfjs-dist')
-      .then((mod) => (mod as unknown as { default?: PdfjsModule }).default ?? (mod as unknown as PdfjsModule))
+      .then(
+        (mod) =>
+          (mod as unknown as { default?: PdfjsModule }).default ?? (mod as unknown as PdfjsModule),
+      )
       .catch(() => null)
   }
   return modulePromise

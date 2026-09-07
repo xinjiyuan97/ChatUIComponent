@@ -367,7 +367,9 @@ export const TREE: FileNode[] = [
         id: 'src/api',
         name: 'api',
         type: 'dir',
-        children: [{ id: 'src/api/client.ts', name: 'client.ts', type: 'file', file: FILES.client }],
+        children: [
+          { id: 'src/api/client.ts', name: 'client.ts', type: 'file', file: FILES.client },
+        ],
       },
       // No `children` and `onExpand` is provided: expandable, loaded on demand.
       { id: 'src/generated', name: 'generated', type: 'dir' },

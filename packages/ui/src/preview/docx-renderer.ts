@@ -38,7 +38,10 @@ let modulePromise: Promise<DocxModule | null> | null = null
 async function load(): Promise<DocxModule | null> {
   if (!modulePromise) {
     modulePromise = import('docx-preview')
-      .then((mod) => (mod as unknown as { default?: DocxModule }).default ?? (mod as unknown as DocxModule))
+      .then(
+        (mod) =>
+          (mod as unknown as { default?: DocxModule }).default ?? (mod as unknown as DocxModule),
+      )
       .catch(() => null)
   }
   return modulePromise

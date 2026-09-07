@@ -49,7 +49,10 @@ describe('useFileContent', () => {
   })
 
   it('reports a non-ok response as fetch-failed', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => new Response('nope', { status: 404 })))
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('nope', { status: 404 })),
+    )
 
     const file: PreviewFile = { name: 'a.txt', url: 'https://example.test/a.txt' }
     const { result } = renderHook(() => useFileContent(file, { as: 'text' }))

@@ -24,7 +24,12 @@ import {
 import { IconButton } from '../primitives/IconButton'
 import { useChatTheme, useLocale } from '../provider/ChatThemeProvider'
 import { canDownload, downloadFile } from './download'
-import { openPdf, type PdfDocumentHandle, type PdfLoadResult, type PdfPageSize } from './pdf-renderer'
+import {
+  openPdf,
+  type PdfDocumentHandle,
+  type PdfLoadResult,
+  type PdfPageSize,
+} from './pdf-renderer'
 import {
   PreviewFrame,
   PreviewToolbarLabel,
@@ -220,7 +225,9 @@ function PdfViewer({
               'focus-visible:border-cc-border-strong focus-visible:ring-2 focus-visible:ring-cc-accent/45',
             )}
           />
-          <PreviewToolbarLabel collapse>{locale.previewPageOf(handle.numPages)}</PreviewToolbarLabel>
+          <PreviewToolbarLabel collapse>
+            {locale.previewPageOf(handle.numPages)}
+          </PreviewToolbarLabel>
           <IconButton
             size="sm"
             label={locale.previewNextPage}
@@ -361,7 +368,10 @@ function PdfPage({
       className="shrink-0 bg-cc-paper shadow-cc-card"
       style={
         geometry
-          ? { width: Math.floor(geometry.width * scale), height: Math.floor(geometry.height * scale) }
+          ? {
+              width: Math.floor(geometry.width * scale),
+              height: Math.floor(geometry.height * scale),
+            }
           : undefined
       }
     >
@@ -389,7 +399,10 @@ function usePageWindow(scrollRef: { current: HTMLElement | null }, count: number
     const root = scrollRef.current
     if (!root || typeof IntersectionObserver === 'undefined') return
 
-    const make = (rootMargin: string, apply: (update: (previous: Set<number>) => Set<number>) => void) =>
+    const make = (
+      rootMargin: string,
+      apply: (update: (previous: Set<number>) => Set<number>) => void,
+    ) =>
       new IntersectionObserver(
         (entries) => {
           apply((previous) => {

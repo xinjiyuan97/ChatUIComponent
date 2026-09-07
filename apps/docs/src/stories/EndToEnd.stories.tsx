@@ -151,7 +151,10 @@ function ChatColumn({
         footer={
           chat.messages.length === 0 ? (
             <div className="mx-auto w-full max-w-cc-measure px-4 sm:px-6">
-              <SuggestionChips suggestions={SUGGESTIONS} onSelect={(text) => void chat.send(text)} />
+              <SuggestionChips
+                suggestions={SUGGESTIONS}
+                onSelect={(text) => void chat.send(text)}
+              />
             </div>
           ) : undefined
         }
@@ -478,7 +481,7 @@ export const Workspace: Story = {
     docs: {
       description: {
         story:
-          '同一条对话，装进三栏外壳里：左边 `ConversationSidebar`，中间转录区与输入框，右边 `SidePanel`。整个库的东西在这一条里全部同时在跑 —— 流式、工具调用、Mermaid、可运行代码块、A2UI 卡片、附件、语音，加上右栏的文件预览。\n\n**接线一共是两处**：provider 上一个 `panels`，和一次 `panel.open`。\n\n```tsx\n<ChatThemeProvider panels={{ file: filePreviewPanel, tree: myTreePanel }} pdfWorkerSrc={workerUrl}>\npanel.open({ id: node.id, kind: \'file\', title: node.name, data: { file } })\n```\n\n注册表里两条来路不同：`file` 是内置的，它是通往**第二层**（按文件类型索引）的门；`tree` 是这条 story 自己写的五行 —— 一个 `definePanel` 包住 `FileTree`。**`SidePanel` 两个都不认识**，它只查 `kind`、画个标签、把盒子交出去。右栏以后要放 diff、运行日志、设置面板，写法和 `tree` 这条一模一样，面板本身一行都不用改。\n\n几条值得动手试的：\n\n- 树里点 `src/auth.ts` —— 就是上面回复里 `read_file` 读的那个文件，同一份内容。再点 `docs/` 下的 pdf / docx / xlsx，标签一个个叠上去。\n- 再点一次同一个文件：**就地聚焦，不会多一个标签、也不会把标签挪到末尾**。关掉当前标签会选右邻 —— 退回第一个标签是最招人烦的做法。\n- `src/generated` 是懒加载的，展开时才去取。\n- 往输入框里拖个文件再发出去，右边自动开一个预览标签（宿主行为，`onSubmit` 拿到 parts 后自己决定）。\n- 拖右栏左边缘改宽度，双击复位；窄到 480px 以下时预览工具栏会自己收起状态文字，保住按钮。\n- 全部关掉，面板收起，用标题栏那个「工作区」按钮再开回来。\n\n树在这里是**一个标签**，点开文件会切到新标签、树暂时让位。想让树一直留在视野里就改用内置的 `folderPanel`（Preview 那条 story），它在一个标签内部左树右预览。这里选标签，是因为标签逻辑本身值得被看见。',
+          "同一条对话，装进三栏外壳里：左边 `ConversationSidebar`，中间转录区与输入框，右边 `SidePanel`。整个库的东西在这一条里全部同时在跑 —— 流式、工具调用、Mermaid、可运行代码块、A2UI 卡片、附件、语音，加上右栏的文件预览。\n\n**接线一共是两处**：provider 上一个 `panels`，和一次 `panel.open`。\n\n```tsx\n<ChatThemeProvider panels={{ file: filePreviewPanel, tree: myTreePanel }} pdfWorkerSrc={workerUrl}>\npanel.open({ id: node.id, kind: 'file', title: node.name, data: { file } })\n```\n\n注册表里两条来路不同：`file` 是内置的，它是通往**第二层**（按文件类型索引）的门；`tree` 是这条 story 自己写的五行 —— 一个 `definePanel` 包住 `FileTree`。**`SidePanel` 两个都不认识**，它只查 `kind`、画个标签、把盒子交出去。右栏以后要放 diff、运行日志、设置面板，写法和 `tree` 这条一模一样，面板本身一行都不用改。\n\n几条值得动手试的：\n\n- 树里点 `src/auth.ts` —— 就是上面回复里 `read_file` 读的那个文件，同一份内容。再点 `docs/` 下的 pdf / docx / xlsx，标签一个个叠上去。\n- 再点一次同一个文件：**就地聚焦，不会多一个标签、也不会把标签挪到末尾**。关掉当前标签会选右邻 —— 退回第一个标签是最招人烦的做法。\n- `src/generated` 是懒加载的，展开时才去取。\n- 往输入框里拖个文件再发出去，右边自动开一个预览标签（宿主行为，`onSubmit` 拿到 parts 后自己决定）。\n- 拖右栏左边缘改宽度，双击复位；窄到 480px 以下时预览工具栏会自己收起状态文字，保住按钮。\n- 全部关掉，面板收起，用标题栏那个「工作区」按钮再开回来。\n\n树在这里是**一个标签**，点开文件会切到新标签、树暂时让位。想让树一直留在视野里就改用内置的 `folderPanel`（Preview 那条 story），它在一个标签内部左树右预览。这里选标签，是因为标签逻辑本身值得被看见。",
       },
     },
   },
