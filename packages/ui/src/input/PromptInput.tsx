@@ -636,7 +636,9 @@ export function StopButton({
         className,
       )}
     >
-      <StopIcon size={13} />
+      {/* The square occupies 10/24 of the icon grid: 24px keeps the visible mark at
+          10px inside the 32px button, with enough space to read its silhouette. */}
+      <StopIcon size={24} />
     </button>
   )
 }
