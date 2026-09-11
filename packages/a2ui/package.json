@@ -1,6 +1,6 @@
 {
   "name": "@xinjiyuan97/chat-a2ui",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Render agent-authored declarative UI specs into React components.",
   "license": "MIT",
   "keywords": [
