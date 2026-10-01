@@ -134,10 +134,7 @@ export function mockA2UI(
 /** Wraps a body script with the start/end events a full turn needs. */
 export function mockTurn(...groups: MockStep[][]): MockStep[]
 export function mockTurn(id: string, ...groups: MockStep[][]): MockStep[]
-export function mockTurn(
-  idOrGroup: string | MockStep[],
-  ...rest: MockStep[][]
-): MockStep[] {
+export function mockTurn(idOrGroup: string | MockStep[], ...rest: MockStep[][]): MockStep[] {
   const id = typeof idOrGroup === 'string' ? idOrGroup : undefined
   const groups = typeof idOrGroup === 'string' ? rest : [idOrGroup, ...rest]
 

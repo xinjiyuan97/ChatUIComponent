@@ -131,20 +131,20 @@ examples/agent-server/
 
 至少覆盖以下 12 条：
 
-| # | 场景 | 命中什么 |
-|---|---|---|
-| 1-6 | 六种终局各一条 | `stop`/`length`/`tool-calls`/`awaiting-permission`/`cancelled`/`error` |
-| 7 | 断流 | run 未发 `message-end` 就断开（前端应判「未完成」而非成功）|
-| 8 | 取消 | 流式进行中收到 `cancel` input → 终局 `cancelled` |
-| 9 | 重复投递与乱序 | 同一 `eventId` 重复发 + 乱序发（**故意违约以测前端**；服务端不得依赖前端容错）|
-| 10 | 结构化错误 | 含 `retryAfterMs`，且含一例**不可重试** |
-| 11 | 未知事件类型 | 验证前端忽略而不崩 |
-| 12 | `blockId` 交错 | 两路文本块交替增量 |
-| 13 | client tool | `execution:'client'` → 等待 → `tool-result` → 继续 |
-| 14 | 权限往返 | `awaiting-permission` → 同 turn 新 run 恢复 |
-| 15 | 能力最小集 | `server-hello` 声明 `blockIds:false` 等 → 前端降级 |
-| 16 | 用量覆盖 | 多次 usage 快照覆盖而非累加 |
-| 17 | 附件超限 | 按 `limits` 报错 |
+| #   | 场景           | 命中什么                                                                       |
+| --- | -------------- | ------------------------------------------------------------------------------ |
+| 1-6 | 六种终局各一条 | `stop`/`length`/`tool-calls`/`awaiting-permission`/`cancelled`/`error`         |
+| 7   | 断流           | run 未发 `message-end` 就断开（前端应判「未完成」而非成功）                    |
+| 8   | 取消           | 流式进行中收到 `cancel` input → 终局 `cancelled`                               |
+| 9   | 重复投递与乱序 | 同一 `eventId` 重复发 + 乱序发（**故意违约以测前端**；服务端不得依赖前端容错） |
+| 10  | 结构化错误     | 含 `retryAfterMs`，且含一例**不可重试**                                        |
+| 11  | 未知事件类型   | 验证前端忽略而不崩                                                             |
+| 12  | `blockId` 交错 | 两路文本块交替增量                                                             |
+| 13  | client tool    | `execution:'client'` → 等待 → `tool-result` → 继续                             |
+| 14  | 权限往返       | `awaiting-permission` → 同 turn 新 run 恢复                                    |
+| 15  | 能力最小集     | `server-hello` 声明 `blockIds:false` 等 → 前端降级                             |
+| 16  | 用量覆盖       | 多次 usage 快照覆盖而非累加                                                    |
+| 17  | 附件超限       | 按 `limits` 报错                                                               |
 
 （编号 13-17 是第 10-12 条的补充，一并做。共 17 条场景。）
 

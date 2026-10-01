@@ -33,21 +33,21 @@ registry. The curl shape is:
 curl -N -H 'content-type: application/json' -d '{"metadata":{"scenario":"stop"},"messages":[],"input":[{"type":"message","inputId":"i1","parts":[{"type":"text","text":"hi"}]}]}' http://127.0.0.1:3210/agent/chat
 ```
 
-| Scenario | Trigger |
-|---|---|
-| `stop`, `length`, `tool-calls`, `awaiting-permission`, `error` | `metadata.scenario` with the same name |
-| `cancel` | Start a stream, then POST a `cancel` input with its `turnId`/`runId` |
-| `cancelled` | `metadata.scenario=cancelled` (normal terminal fixture) |
-| `disconnect` | `metadata.scenario=disconnect` |
-| `duplicate-out-of-order` | `metadata.scenario=duplicate-out-of-order` |
-| `structured-error` | `metadata.scenario=structured-error` |
-| `unknown-event` | `metadata.scenario=unknown-event` |
-| `block-ids` | `metadata.scenario=block-ids` |
-| `client-tool` | First request emits client tool; post `tool-result` on same turn |
-| `permission` | First request waits; post `permission-decision` on same turn |
-| `minimal-capabilities` | `metadata.scenario=minimal-capabilities` |
-| `usage` | `metadata.scenario=usage` |
-| `attachment-limit` | Send a file part with `size > 1024` |
+| Scenario                                                       | Trigger                                                              |
+| -------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `stop`, `length`, `tool-calls`, `awaiting-permission`, `error` | `metadata.scenario` with the same name                               |
+| `cancel`                                                       | Start a stream, then POST a `cancel` input with its `turnId`/`runId` |
+| `cancelled`                                                    | `metadata.scenario=cancelled` (normal terminal fixture)              |
+| `disconnect`                                                   | `metadata.scenario=disconnect`                                       |
+| `duplicate-out-of-order`                                       | `metadata.scenario=duplicate-out-of-order`                           |
+| `structured-error`                                             | `metadata.scenario=structured-error`                                 |
+| `unknown-event`                                                | `metadata.scenario=unknown-event`                                    |
+| `block-ids`                                                    | `metadata.scenario=block-ids`                                        |
+| `client-tool`                                                  | First request emits client tool; post `tool-result` on same turn     |
+| `permission`                                                   | First request waits; post `permission-decision` on same turn         |
+| `minimal-capabilities`                                         | `metadata.scenario=minimal-capabilities`                             |
+| `usage`                                                        | `metadata.scenario=usage`                                            |
+| `attachment-limit`                                             | Send a file part with `size > 1024`                                  |
 
 ## Stop
 

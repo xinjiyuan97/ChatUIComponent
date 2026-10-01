@@ -106,8 +106,7 @@ export function useChat(options: UseChatOptions): UseChatResult {
     [store],
   )
   const submitPermissionDecision = useCallback(
-    (resolution: PermissionResolution) =>
-      store.getState().submitPermissionDecision(resolution),
+    (resolution: PermissionResolution) => store.getState().submitPermissionDecision(resolution),
     [store],
   )
   const submitA2UIAction = useCallback(

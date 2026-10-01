@@ -25,4 +25,3 @@ turn、input、event 和 SSE 语义。
 - 事件带 `eventId` 时可重放，且同一个 `eventId` 的内容不可变。
 - 废弃流程为 `active → deprecated → removed`，移除时递增协议主版本。
 - 协议版本由请求 JSON 的 `protocol` 字段决定，HTTP header 只用于辅助协商。
-

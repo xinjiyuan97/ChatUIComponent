@@ -50,7 +50,9 @@ describe('SSE cancellation', () => {
   })
 
   it('rejects non-success cancellation responses', async () => {
-    const fetch = vi.fn(async () => new Response('nope', { status: 404 })) as unknown as typeof globalThis.fetch
+    const fetch = vi.fn(
+      async () => new Response('nope', { status: 404 }),
+    ) as unknown as typeof globalThis.fetch
     const transport = createSSETransport({ url: '/chat', fetch })
 
     await expect(

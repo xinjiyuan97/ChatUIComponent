@@ -74,7 +74,9 @@ export async function* fetchSSE(
 }
 
 function stripUndefined<T extends Record<string, unknown>>(value: T): Partial<T> {
-  return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined)) as Partial<T>
+  return Object.fromEntries(
+    Object.entries(value).filter(([, entry]) => entry !== undefined),
+  ) as Partial<T>
 }
 
 function truncate(text: string, max = 300): string {
