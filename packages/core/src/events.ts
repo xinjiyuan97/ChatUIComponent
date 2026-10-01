@@ -4,6 +4,7 @@ import type {
   FileStatus,
   PermissionRequest,
   PermissionResolution,
+  ServerHello,
   TodoItem,
   TokenUsage,
 } from './types'
@@ -15,64 +16,91 @@ import type {
  * events, and the store only ever consumes these. Swapping backends therefore never
  * touches the UI layer.
  */
+export type ChatEventContext = {
+  eventId?: number
+  turnId?: string
+  runId?: string
+  blockId?: string
+}
+
 export type ChatEvent =
   /** A new assistant message begins. `id` lets the host correlate with its own records. */
-  | { type: 'message-start'; id?: string }
-  | { type: 'text-start' }
-  | { type: 'text-delta'; delta: string }
-  | { type: 'text-end' }
-  /**
-   * `redacted` means the model is thinking but no text will follow — several providers
-   * report only that it happened. Some transports know this up front, others only when
-   * the block closes, so both ends accept the flag.
-   */
-  | { type: 'reasoning-start'; redacted?: boolean }
-  | { type: 'reasoning-delta'; delta: string }
-  | { type: 'reasoning-end'; redacted?: boolean }
-  | { type: 'tool-input-start'; toolCallId: string; name: string }
-  /** A chunk of the argument JSON, as raw text. */
-  | { type: 'tool-input-delta'; toolCallId: string; delta: string }
-  /** Arguments are final. `input` wins over anything accumulated from deltas. */
-  | { type: 'tool-input-available'; toolCallId: string; input: unknown }
-  | { type: 'tool-executing'; toolCallId: string }
-  | { type: 'tool-output'; toolCallId: string; output: unknown }
-  | { type: 'tool-error'; toolCallId: string; error: string }
-  | { type: 'a2ui'; surfaceId: string; spec: A2UINode; data?: Record<string, unknown> }
-  | { type: 'a2ui-patch'; surfaceId: string; patch: A2UIPatch }
-  /** The agent is blocked, waiting for a human to approve an action. */
-  | { type: 'permission-request'; request: PermissionRequest }
-  /**
-   * A request was decided somewhere other than this UI — a server-side policy let it
-   * through, or the user answered on another device. A local click does not go through
-   * here; it goes straight to the host's callback.
-   */
-  | { type: 'permission-resolved'; requestId: string; resolution: PermissionResolution }
-  /** The agent's plan. Re-emitting the same `todoId` replaces it rather than appending. */
-  | { type: 'todo'; todoId?: string; items: TodoItem[]; title?: string }
-  /**
-   * A file, or a placeholder for one still being generated.
-   *
-   * Re-emitting the same `id` replaces the part in place, so the sequence is
-   * `{id, status:'generating', width, height}` then `{id, status:'ready', url}`. Fields
-   * omitted from the second event are kept — the dimensions declared up front are what
-   * hold the layout still while the bytes are on their way.
-   */
-  | {
-      type: 'file'
-      id?: string
-      url?: string
-      mediaType: string
-      name?: string
-      size?: number
-      status?: FileStatus
-      width?: number
-      height?: number
-      progress?: number
-      error?: string
-    }
-  | { type: 'source'; url: string; title?: string; snippet?: string }
-  | { type: 'custom'; name: string; data: unknown }
-  | { type: 'message-end'; finishReason?: string; usage?: TokenUsage }
-  | { type: 'error'; error: string }
+  (
+    | { type: 'message-start'; id?: string }
+    | { type: 'text-start' }
+    | { type: 'text-delta'; delta: string }
+    | { type: 'text-end' }
+    /**
+     * `redacted` means the model is thinking but no text will follow — several providers
+     * report only that it happened. Some transports know this up front, others only when
+     * the block closes, so both ends accept the flag.
+     */
+    | { type: 'reasoning-start'; redacted?: boolean }
+    | { type: 'reasoning-delta'; delta: string }
+    | { type: 'reasoning-end'; redacted?: boolean }
+    /**
+     * For client-owned tools the server must stop after the input is available: it must not
+     * emit `tool-executing`; the host executes the tool and sends a typed `tool-result` input.
+     */
+    | {
+        type: 'tool-input-start'
+        toolCallId: string
+        name: string
+        execution?: 'server' | 'client'
+      }
+    /** A chunk of the argument JSON, as raw text. */
+    | { type: 'tool-input-delta'; toolCallId: string; delta: string }
+    /** Arguments are final. `input` wins over anything accumulated from deltas. */
+    | { type: 'tool-input-available'; toolCallId: string; input: unknown }
+    | { type: 'tool-executing'; toolCallId: string }
+    | { type: 'tool-output'; toolCallId: string; output: unknown }
+    | { type: 'tool-error'; toolCallId: string; error: string }
+    | { type: 'a2ui'; surfaceId: string; spec: A2UINode; data?: Record<string, unknown> }
+    | { type: 'a2ui-patch'; surfaceId: string; patch: A2UIPatch }
+    /** The agent is blocked, waiting for a human to approve an action. */
+    | { type: 'permission-request'; request: PermissionRequest }
+    /**
+     * A request was decided somewhere other than this UI — a server-side policy let it
+     * through, or the user answered on another device. A local click does not go through
+     * here; it goes straight to the host's callback.
+     */
+    | { type: 'permission-resolved'; requestId: string; resolution: PermissionResolution }
+    /** The agent's plan. Re-emitting the same `todoId` replaces it rather than appending. */
+    | { type: 'todo'; todoId?: string; items: TodoItem[]; title?: string }
+    /**
+     * A file, or a placeholder for one still being generated.
+     *
+     * Re-emitting the same `id` replaces the part in place, so the sequence is
+     * `{id, status:'generating', width, height}` then `{id, status:'ready', url}`. Fields
+     * omitted from the second event are kept — the dimensions declared up front are what
+     * hold the layout still while the bytes are on their way.
+     */
+    | {
+        type: 'file'
+        id?: string
+        url?: string
+        mediaType: string
+        name?: string
+        size?: number
+        status?: FileStatus
+        width?: number
+        height?: number
+        progress?: number
+        error?: string
+      }
+    | { type: 'source'; url: string; title?: string; snippet?: string }
+    | { type: 'custom'; name: string; data: unknown }
+    | ServerHello
+    | { type: 'message-end'; finishReason?: string; usage?: TokenUsage }
+    | {
+        type: 'error'
+        error: string
+        scope?: 'transport' | 'server' | 'tool' | 'client'
+        code?: string
+        retryable?: boolean
+        retryAfterMs?: number
+      }
+  ) &
+    ChatEventContext
 
 export type ChatEventType = ChatEvent['type']

@@ -7,6 +7,7 @@ import { formatBytes } from '../lib/format'
 import { AlertIcon, FileIcon } from '../icons'
 import { useLocale } from '../provider/ChatThemeProvider'
 import { ImagePart } from './ImagePart'
+import { CancelledFile } from './CancelledFile'
 
 export type FilePartProps = {
   part: FilePartData
@@ -16,6 +17,10 @@ export type FilePartProps = {
 /** An attachment: images go to `ImagePart`, everything else renders as a compact chip. */
 export function FilePart({ part, className }: FilePartProps) {
   const locale = useLocale()
+
+  if (part.cancelled || part.status === 'cancelled') {
+    return <CancelledFile name={part.name} className={className} />
+  }
 
   if (part.mediaType.startsWith('image/')) {
     return <ImagePart part={part} className={className} />

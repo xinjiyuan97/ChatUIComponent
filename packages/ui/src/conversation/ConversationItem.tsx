@@ -19,15 +19,15 @@ import { useLocale } from '../provider/ChatThemeProvider'
 /**
  * How the active row is marked.
  *
- * `none` drops the accent bar and keeps the tinted fill, which is still enough to tell
- * which conversation is open — the fill, not the bar, is what carries that on its own.
+ * The default is the tinted fill, which is enough to tell which conversation is open.
+ * `bar` explicitly adds an accent bar when a stronger edge cue is useful.
  */
 export type ActiveIndicator = 'bar' | 'none'
 
 export type ConversationItemProps = {
   conversation: Conversation
   active?: boolean
-  /** Defaults to `bar`. */
+  /** Defaults to `none`; pass `bar` to explicitly show the accent bar. */
   activeIndicator?: ActiveIndicator
   /** Substring to highlight, from the search box. */
   query?: string
@@ -53,19 +53,21 @@ export const SUBTITLE_ROW_HEIGHT = 46
 /**
  * One row in the sidebar.
  *
- * The active row is marked with a 2px accent bar and a faint fill rather than a solid
- * accent background: the sidebar sits beside the conversation for the entire session, and
- * a saturated block there pulls attention away from the text the whole time.
+ * The active row is marked with a faint fill rather than a solid accent background or a
+ * bar by default: the sidebar sits beside the conversation for the entire session, and a
+ * saturated block there pulls attention away from the text the whole time. The fill and
+ * darker title color are enough to show which conversation is open.
  *
- * `activeIndicator="none"` drops the bar for products whose rail already has a leading
- * column — an avatar, a favicon, a status dot — where a second element on the same edge
- * reads as clutter rather than as emphasis.
+ * `activeIndicator="bar"` is the explicit exception for products that want the extra cue.
+ * Products whose rail already has a leading column — an avatar, a favicon, a status dot —
+ * can keep the default because a second element on the same edge reads as clutter rather
+ * than as emphasis.
  */
 export function ConversationItem(props: ConversationItemProps) {
   const {
     conversation,
     active = false,
-    activeIndicator = 'bar',
+    activeIndicator = 'none',
     query,
     focused = false,
     collapsed = false,

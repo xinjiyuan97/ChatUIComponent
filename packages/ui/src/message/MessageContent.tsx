@@ -1,6 +1,12 @@
 'use client'
 
-import type { ChatMessage, MessagePart, SourcePart } from '@xinjiyuan97/chat-core'
+import type {
+  ChatMessage,
+  A2UIActionRequest,
+  MessagePart,
+  PermissionResolution,
+  SourcePart,
+} from '@xinjiyuan97/chat-core'
 import { useRef, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
@@ -18,6 +24,11 @@ import { ToolCallPart } from '../parts/ToolCallPart'
 export type MessageContentProps = {
   message: ChatMessage
   onRetry?: () => void
+  onPermissionDecision?: (
+    resolution: PermissionResolution,
+    message: ChatMessage,
+  ) => void | Promise<void>
+  onA2UIAction?: (action: A2UIActionRequest, message: ChatMessage) => void | Promise<void>
   /**
    * Replaces the built-in renderer for a part. Return `undefined` to fall through to the
    * default — that way a host can special-case one part type without reimplementing the
@@ -34,7 +45,14 @@ export type MessageContentProps = {
  * appear after it, and any renderer that groups by type instead of walking the array
  * silently rewrites the transcript.
  */
-export function MessageContent({ message, onRetry, renderPart, className }: MessageContentProps) {
+export function MessageContent({
+  message,
+  onRetry,
+  onPermissionDecision,
+  onA2UIAction,
+  renderPart,
+  className,
+}: MessageContentProps) {
   const streaming = message.status === 'streaming'
   const sources = useStableSources(message.parts)
   const lastIndex = message.parts.length - 1
@@ -67,9 +85,23 @@ export function MessageContent({ message, onRetry, renderPart, className }: Mess
             case 'tool':
               return <ToolCallPart key={index} part={part} message={message} />
             case 'a2ui':
-              return <A2UIPart key={index} part={part} message={message} />
+              return (
+                <A2UIPart
+                  key={index}
+                  part={part}
+                  message={message}
+                  onAction={onA2UIAction}
+                />
+              )
             case 'permission':
-              return <PermissionPart key={index} part={part} message={message} />
+              return (
+                <PermissionPart
+                  key={index}
+                  part={part}
+                  message={message}
+                  onDecide={onPermissionDecision}
+                />
+              )
             case 'todo':
               return <TodoPart key={index} part={part} />
             case 'file':

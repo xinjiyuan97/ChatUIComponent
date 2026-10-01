@@ -15,6 +15,77 @@ function replay(events: ChatEvent[], now = NOW): ChatMessage {
 }
 
 describe('applyEvent', () => {
+  it('waits for the host when a client tool becomes available', () => {
+    const message = replay([
+      { type: 'tool-input-start', toolCallId: 'client-1', name: 'read-file', execution: 'client' },
+      { type: 'tool-input-available', toolCallId: 'client-1', input: { path: 'a.txt' } },
+    ])
+
+    expect(message.parts).toEqual([
+      expect.objectContaining({
+        type: 'tool',
+        toolCallId: 'client-1',
+        state: 'awaiting-client',
+        input: { path: 'a.txt' },
+      }),
+    ])
+  })
+
+  it('keeps tools without execution metadata on the server path', () => {
+    const message = replay([
+      { type: 'tool-input-start', toolCallId: 'server-1', name: 'search' },
+      { type: 'tool-input-available', toolCallId: 'server-1', input: { query: 'x' } },
+      { type: 'tool-executing', toolCallId: 'server-1' },
+    ])
+
+    expect((message.parts[0] as ToolPart).state).toBe('executing')
+  })
+
+  it('preserves structured error fields and explicit retryability', () => {
+    const event = {
+      type: 'error' as const,
+      error: 'Unauthorized',
+      scope: 'server' as const,
+      code: 'unauthorized',
+      retryable: false,
+      retryAfterMs: 0,
+    }
+    const message = applyEvent(empty(), event, NOW)
+    expect(message.parts).toEqual([
+      {
+        type: 'error',
+        message: 'Unauthorized',
+        scope: 'server',
+        code: 'unauthorized',
+        retryable: false,
+        retryAfterMs: 0,
+      },
+    ])
+  })
+
+  it('keeps legacy errors retryable by default', () => {
+    expect(replay([{ type: 'error', error: 'x' }]).parts).toEqual([
+      { type: 'error', message: 'x', retryable: true },
+    ])
+  })
+
+  it('preserves a retryable rate limit and its retry delay', () => {
+    const event = {
+      type: 'error' as const,
+      error: 'Wait',
+      scope: 'transport' as const,
+      code: 'rate_limited',
+      retryable: true,
+      retryAfterMs: 1500,
+    }
+    expect(applyEvent(empty(), event, NOW).parts[0]).toMatchObject({
+      scope: 'transport',
+      code: 'rate_limited',
+      retryable: true,
+      retryAfterMs: 1500,
+    })
+  })
+
   it('never mutates the input message', () => {
     const message = empty()
     const next = applyEvent(message, { type: 'text-delta', delta: 'hi' }, NOW)
@@ -39,6 +110,70 @@ describe('applyEvent', () => {
 
     expect(message.parts.map((part) => part.type)).toEqual(['text', 'tool', 'text'])
     expect((message.parts[2] as TextPart).text).toBe('after')
+  })
+
+  it('keeps interleaved text blocks separate by blockId', () => {
+    const message = replay([
+      { type: 'text-start', blockId: 'a' },
+      { type: 'text-delta', blockId: 'a', delta: 'A1' },
+      { type: 'text-start', blockId: 'b' },
+      { type: 'text-delta', blockId: 'b', delta: 'B1' },
+      { type: 'text-delta', blockId: 'a', delta: 'A2' },
+      { type: 'text-delta', blockId: 'b', delta: 'B2' },
+      { type: 'text-end', blockId: 'a' },
+      { type: 'text-end', blockId: 'b' },
+    ])
+
+    expect(message.parts).toEqual([
+      { type: 'text', blockId: 'a', text: 'A1A2' },
+      { type: 'text', blockId: 'b', text: 'B1B2' },
+    ])
+  })
+
+  it('drops blockId deltas and ends when the target block is unknown', () => {
+    const message = replay([
+      { type: 'text-delta', blockId: 'missing', delta: 'wrong' },
+      { type: 'text-end', blockId: 'missing' },
+    ])
+
+    expect(message.parts).toEqual([])
+  })
+
+  it('treats a repeated text start with the same blockId as idempotent', () => {
+    const message = replay([
+      { type: 'text-start', blockId: 'same' },
+      { type: 'text-delta', blockId: 'same', delta: 'text' },
+      { type: 'text-start', blockId: 'same' },
+      { type: 'text-delta', blockId: 'same', delta: '!' },
+    ])
+
+    expect(message.parts).toEqual([{ type: 'text', blockId: 'same', text: 'text!' }])
+  })
+
+  it('keeps interleaved reasoning blocks separate by blockId', () => {
+    const message = replay([
+      { type: 'reasoning-start', blockId: 'a' },
+      { type: 'reasoning-delta', blockId: 'a', delta: 'A1' },
+      { type: 'reasoning-start', blockId: 'b' },
+      { type: 'reasoning-delta', blockId: 'b', delta: 'B1' },
+      { type: 'reasoning-delta', blockId: 'a', delta: 'A2' },
+      { type: 'reasoning-delta', blockId: 'b', delta: 'B2' },
+      { type: 'reasoning-end', blockId: 'a' },
+      { type: 'reasoning-end', blockId: 'b' },
+    ])
+
+    expect(message.parts).toEqual([
+      { type: 'reasoning', blockId: 'a', text: 'A1A2', startedAt: NOW, durationMs: 0 },
+      { type: 'reasoning', blockId: 'b', text: 'B1B2', startedAt: NOW, durationMs: 0 },
+    ])
+  })
+
+  it('closes dangling blocks with and without blockId', () => {
+    const withId = replay([{ type: 'reasoning-start', blockId: 'r' }, { type: 'message-end' }])
+    const withoutId = replay([{ type: 'reasoning-start' }, { type: 'message-end' }])
+
+    expect(withId.parts[0]).toMatchObject({ blockId: 'r', durationMs: 0 })
+    expect(withoutId.parts[0]).toMatchObject({ type: 'reasoning', durationMs: 0 })
   })
 
   it('keeps unchanged parts referentially stable', () => {
@@ -300,6 +435,43 @@ describe('applyEvent', () => {
       request: { id: 'p1', toolName: 'bash' },
     })
     expect(message.status).toBe('complete')
+  })
+
+  it('maps cancelled message-end to an aborted message', () => {
+    const message = replay([
+      { type: 'reasoning-start' },
+      { type: 'message-end', finishReason: 'cancelled' },
+    ])
+
+    expect(message.status).toBe('aborted')
+    expect(message.metadata?.finishReason).toBe('cancelled')
+    expect(message.parts[0]).toMatchObject({ type: 'reasoning', cancelled: true })
+  })
+
+  it('keeps stop message-end complete', () => {
+    const message = replay([{ type: 'message-end', finishReason: 'stop' }])
+
+    expect(message.status).toBe('complete')
+  })
+
+  it('maps error message-end to an error message', () => {
+    const message = replay([{ type: 'message-end', finishReason: 'error' }])
+
+    expect(message.status).toBe('error')
+  })
+
+  it('preserves awaiting-permission metadata without treating it as failure', () => {
+    const message = replay([
+      { type: 'permission-request', request: { id: 'p1', toolName: 'bash' } },
+      { type: 'message-end', finishReason: 'awaiting-permission' },
+    ])
+
+    expect(message.status).toBe('complete')
+    expect(message.metadata?.finishReason).toBe('awaiting-permission')
+    expect(message.parts[0]).toEqual({
+      type: 'permission',
+      request: { id: 'p1', toolName: 'bash' },
+    })
   })
 
   it('replaces a todo list in place when the plan is revised', () => {

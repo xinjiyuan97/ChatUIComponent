@@ -13,7 +13,7 @@ import type { ActiveIndicator } from './ConversationItem'
 export type ConversationSidebarProps = {
   conversations: Conversation[]
   activeId?: string
-  /** `none` drops the accent bar on the active row, leaving only its tinted fill. */
+  /** Defaults to no accent bar; pass `bar` to explicitly show it on the active row. */
   activeIndicator?: ActiveIndicator
   loading?: boolean
   /** Groups the list into collapsible per-agent sections. */

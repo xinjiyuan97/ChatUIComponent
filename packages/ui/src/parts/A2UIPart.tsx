@@ -1,7 +1,11 @@
 'use client'
 
-import type { ChatMessage, A2UIPart as A2UIPartData } from '@xinjiyuan97/chat-core'
-import { A2UIRenderer, type A2UINode } from '@xinjiyuan97/chat-a2ui'
+import type {
+  A2UIActionRequest,
+  ChatMessage,
+  A2UIPart as A2UIPartData,
+} from '@xinjiyuan97/chat-core'
+import { A2UIRenderer, type A2UIAction, type A2UINode } from '@xinjiyuan97/chat-a2ui'
 
 import { cn } from '../lib/cn'
 import { AlertIcon } from '../icons'
@@ -10,6 +14,7 @@ import { useChatTheme } from '../provider/ChatThemeProvider'
 export type A2UIPartProps = {
   part: A2UIPartData
   message: ChatMessage
+  onAction?: (action: A2UIActionRequest, message: ChatMessage) => void | Promise<void>
   className?: string
 }
 
@@ -22,8 +27,9 @@ export type A2UIPartProps = {
  * deep, or arrive half-written. Each of those degrades to something readable instead of
  * taking the message down with it.
  */
-export function A2UIPart({ part, message, className }: A2UIPartProps) {
+export function A2UIPart({ part, message, onAction, className }: A2UIPartProps) {
   const { a2uiRegistry, onA2UIAction, locale } = useChatTheme()
+  const handleAction = onAction ?? onA2UIAction
 
   return (
     <div
@@ -42,7 +48,9 @@ export function A2UIPart({ part, message, className }: A2UIPartProps) {
         data={part.data}
         surfaceId={part.surfaceId}
         disabled={part.resolved}
-        onAction={(action) => onA2UIAction?.(action, message)}
+        onAction={(action: A2UIAction) => {
+          void handleAction?.(action, message)
+        }}
         renderUnknown={(node) => (
           <div className="rounded-cc-xs bg-cc-subtle px-2 py-1.5 font-cc-mono text-cc-xs text-cc-muted">
             {locale.a2uiUnknownComponent(node.type)}

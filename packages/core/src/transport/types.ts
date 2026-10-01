@@ -1,8 +1,21 @@
 import type { ChatEvent } from '../events'
-import type { ChatMessage } from '../types'
+import type { ChatCapabilities, ChatInput, ChatMessage, ServerHello } from '../types'
+
+export type CancelRequest = {
+  turnId?: string
+  runId?: string
+  input: Extract<ChatInput, { type: 'cancel' }>
+}
 
 export type SendRequest = {
   messages: ChatMessage[]
+  protocol?: string
+  conversationId?: string
+  turnId?: string
+  runId?: string
+  capabilities?: ChatCapabilities
+  resume?: { lastEventId?: number }
+  input?: ChatInput[]
   /** Extra fields merged into the request payload. */
   body?: Record<string, unknown>
   headers?: Record<string, string>
@@ -12,6 +25,8 @@ export type SendRequest = {
 
 export type TransportContext = {
   signal: AbortSignal
+  /** Receives the stream's first server-hello metadata event, when supported. */
+  onServerHello?: (hello: ServerHello) => void
 }
 
 /**
@@ -22,6 +37,7 @@ export type TransportContext = {
  */
 export interface ChatTransport {
   send(request: SendRequest, context: TransportContext): AsyncIterable<ChatEvent>
+  cancel?(request: CancelRequest): Promise<void>
 }
 
 /** Thrown for non-2xx responses so callers can inspect the status. */

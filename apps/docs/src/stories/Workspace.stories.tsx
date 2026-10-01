@@ -145,7 +145,6 @@ function Workspace() {
           <ConversationSidebar
             conversations={CONVERSATIONS.slice(0, 8)}
             activeId={activeId}
-            activeIndicator="none"
             onSelect={setActiveId}
             onNewChat={() => setActiveId(undefined)}
             now={NOW}

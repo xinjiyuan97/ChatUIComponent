@@ -9,6 +9,42 @@
 
 export type MessageRole = 'user' | 'assistant' | 'system'
 
+export type ChatCapabilities = {
+  blockIds?: boolean
+  resume?: boolean
+  clientTools?: boolean
+  permissions?: boolean
+  a2ui?: boolean
+}
+
+export type ChatLimits = {
+  disconnectGracePeriodMs?: number
+  maxAttachmentBytes?: number
+  maxAttachmentCount?: number
+  resumeWindowEvents?: number
+}
+
+export type ServerHello = {
+  type: 'server-hello'
+  protocol: string
+  capabilities: ChatCapabilities
+  limits: ChatLimits
+}
+
+export type ChatInput =
+  | { type: 'message'; inputId: string; parts: MessagePart[] }
+  | { type: 'tool-result'; inputId: string; toolCallId: string; output?: unknown; error?: string }
+  | {
+      type: 'permission-decision'
+      inputId: string
+      requestId: string
+      option: string
+      decision: 'allow-once' | 'allow-always' | 'deny' | 'custom'
+      reason?: string
+    }
+  | { type: 'a2ui-action'; inputId: string; surfaceId: string; action: string; payload?: unknown }
+  | { type: 'cancel'; inputId: string; reason?: string }
+
 export type MessageStatus = 'streaming' | 'complete' | 'error' | 'aborted'
 
 /** Lifecycle of a single tool call, mirroring how providers stream them. */
@@ -19,8 +55,11 @@ export type ToolState =
   | 'input-available'
   /** The host told us the tool is running. */
   | 'executing'
+  /** The arguments are ready and a client host must execute the tool. */
+  | 'awaiting-client'
   | 'output-available'
   | 'output-error'
+  | 'cancelled'
 
 /**
  * A declarative UI node emitted by an agent. Kept in core (rather than in `@xinjiyuan97/chat-a2ui`)
@@ -43,14 +82,24 @@ export type A2UIPatch = {
   value: unknown
 }
 
+export type A2UIActionRequest = {
+  surfaceId: string
+  action: string
+  payload?: unknown
+  /** Whether the host should mark the surface locally after accepting the action. */
+  resolve?: boolean
+}
+
 export type TextPart = {
   type: 'text'
   text: string
+  blockId?: string
 }
 
 export type ReasoningPart = {
   type: 'reasoning'
   text: string
+  blockId?: string
   /** Filled in when the reasoning block closes. */
   durationMs?: number
   /** Wall-clock start, used to render a live counter while streaming. */
@@ -64,6 +113,8 @@ export type ReasoningPart = {
    * flag exists to let the UI show a one-line receipt instead of an empty expander.
    */
   redacted?: boolean
+  /** The stream was cancelled before this reasoning block closed. */
+  cancelled?: true
 }
 
 export type ToolPart = {
@@ -71,6 +122,8 @@ export type ToolPart = {
   toolCallId: string
   name: string
   state: ToolState
+  /** Where the tool is owned; omitted on legacy parts, which are server-owned. */
+  execution?: 'server' | 'client'
   /** Parsed arguments. Only present once the JSON is complete and valid. */
   input?: unknown
   /** Raw argument text. Always present while streaming, and kept if JSON parsing fails. */
@@ -79,6 +132,8 @@ export type ToolPart = {
   error?: string
   startedAt?: number
   durationMs?: number
+  /** The stream was cancelled before this tool call completed. */
+  cancelled?: true
 }
 
 export type A2UIPart = {
@@ -92,7 +147,7 @@ export type A2UIPart = {
 }
 
 /** Where a file is in its lifecycle. Absent means "already there", the common case. */
-export type FileStatus = 'generating' | 'ready' | 'error'
+export type FileStatus = 'generating' | 'ready' | 'error' | 'cancelled'
 
 /**
  * An attachment, or a file the agent is still producing.
@@ -122,6 +177,8 @@ export type FilePart = {
   progress?: number
   /** Why generation failed, with `status: 'error'`. */
   error?: string
+  /** The stream was cancelled before this file was generated. */
+  cancelled?: true
 }
 
 export type SourcePart = {
@@ -135,11 +192,14 @@ export type ErrorPart = {
   type: 'error'
   message: string
   retryable?: boolean
+  scope?: 'transport' | 'server' | 'tool' | 'client'
+  code?: string
+  retryAfterMs?: number
 }
 
 /* ------------------------------------------------------------------ permission */
 
-export type PermissionDecision = 'allow-once' | 'allow-always' | 'deny'
+export type PermissionDecision = 'allow-once' | 'allow-always' | 'deny' | 'custom'
 
 /**
  * Rough blast radius of the pending action.

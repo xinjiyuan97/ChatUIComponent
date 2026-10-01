@@ -19,9 +19,24 @@ export function applyEvent(
 
     case 'text-start':
       // Explicitly opens a new block even if the previous part was also text.
+      if (event.blockId !== undefined) {
+        if (indexOfBlock(message.parts, 'text', event.blockId) !== -1) return message
+        return withParts(message, [
+          ...message.parts,
+          { type: 'text', blockId: event.blockId, text: '' },
+        ])
+      }
       return withParts(message, [...message.parts, { type: 'text', text: '' }])
 
     case 'text-delta':
+      if (event.blockId !== undefined) {
+        const index = indexOfBlock(message.parts, 'text', event.blockId)
+        if (index === -1) return message
+        return replacePart(message, index, {
+          ...(message.parts[index] as TextPart),
+          text: (message.parts[index] as TextPart).text + event.delta,
+        })
+      }
       return appendToLast<TextPart>(
         message,
         'text',
@@ -30,15 +45,40 @@ export function applyEvent(
       )
 
     case 'text-end':
+      if (
+        event.blockId !== undefined &&
+        indexOfBlock(message.parts, 'text', event.blockId) === -1
+      ) {
+        return message
+      }
       return message
 
     case 'reasoning-start':
+      if (event.blockId !== undefined) {
+        if (indexOfBlock(message.parts, 'reasoning', event.blockId) !== -1) return message
+        return withParts(message, [
+          ...message.parts,
+          {
+            type: 'reasoning',
+            blockId: event.blockId,
+            text: '',
+            startedAt: now,
+            ...redactedFlag(event.redacted),
+          },
+        ])
+      }
       return withParts(message, [
         ...message.parts,
         { type: 'reasoning', text: '', startedAt: now, ...redactedFlag(event.redacted) },
       ])
 
     case 'reasoning-delta':
+      if (event.blockId !== undefined) {
+        const index = indexOfBlock(message.parts, 'reasoning', event.blockId)
+        if (index === -1) return message
+        const part = message.parts[index] as ReasoningPart
+        return replacePart(message, index, { ...part, text: part.text + event.delta })
+      }
       return appendToLast<ReasoningPart>(
         message,
         'reasoning',
@@ -47,7 +87,16 @@ export function applyEvent(
       )
 
     case 'reasoning-end': {
-      const index = lastIndexOfType(message.parts, 'reasoning')
+      if (
+        event.blockId !== undefined &&
+        indexOfBlock(message.parts, 'reasoning', event.blockId) === -1
+      ) {
+        return message
+      }
+      const index =
+        event.blockId === undefined
+          ? lastIndexOfType(message.parts, 'reasoning')
+          : indexOfBlock(message.parts, 'reasoning', event.blockId)
       if (index === -1) return message
       const part = message.parts[index] as ReasoningPart
       // Already closed — a duplicate end event must not reset the recorded duration.
@@ -69,6 +118,7 @@ export function applyEvent(
           toolCallId: event.toolCallId,
           name: event.name,
           state: 'input-streaming',
+          ...(event.execution === 'client' ? { execution: 'client' as const } : {}),
           inputText: '',
           startedAt: now,
         },
@@ -84,7 +134,7 @@ export function applyEvent(
     case 'tool-input-available':
       return updateTool(message, event.toolCallId, now, (part) => ({
         ...part,
-        state: 'input-available',
+        state: part.execution === 'client' ? 'awaiting-client' : 'input-available',
         input: event.input,
       }))
 
@@ -218,10 +268,17 @@ export function applyEvent(
       ])
 
     case 'message-end':
+      // `awaiting-permission` is intentionally represented as complete for now because
+      // MessageStatus has no waiting value. Its metadata remains authoritative: this is
+      // not a final turn, and the server continues it in a new run on the same turn.
       return {
         ...message,
-        status: 'complete',
-        parts: closeDanglingParts(message.parts, now),
+        status: statusForFinishReason(event.finishReason),
+        parts: closeDanglingParts(
+          message.parts,
+          now,
+          closeReasonForFinishReason(event.finishReason),
+        ),
         metadata: {
           ...message.metadata,
           ...(event.finishReason ? { finishReason: event.finishReason } : {}),
@@ -234,10 +291,22 @@ export function applyEvent(
         ...message,
         status: 'error',
         parts: [
-          ...closeDanglingParts(message.parts, now),
-          { type: 'error', message: event.error, retryable: true },
+          ...closeDanglingParts(message.parts, now, 'error'),
+          {
+            type: 'error',
+            message: event.error,
+            retryable: event.retryable ?? true,
+            ...stripUndefined({
+              scope: event.scope,
+              code: event.code,
+              retryAfterMs: event.retryAfterMs,
+            }),
+          },
         ],
       }
+
+    case 'server-hello':
+      return message
 
     default: {
       // Unknown event types are ignored rather than thrown, so a newer server can add
@@ -295,6 +364,10 @@ function lastIndexOfType(parts: MessagePart[], type: MessagePart['type']): numbe
     if (parts[i]?.type === type) return i
   }
   return -1
+}
+
+function indexOfBlock(parts: MessagePart[], type: 'text' | 'reasoning', blockId: string): number {
+  return parts.findIndex((part) => part.type === type && part.blockId === blockId)
 }
 
 /**
@@ -361,12 +434,23 @@ function finaliseToolInput(part: ToolPart): Partial<ToolPart> {
  * precisely because it is waiting for an answer — and auto-denying it here would be the
  * renderer making a security decision that belongs to the host.
  */
-function closeDanglingParts(parts: MessagePart[], now: number): MessagePart[] {
+export type StreamEndReason = 'normal' | 'cancelled' | 'error'
+
+export function closeDanglingParts(
+  parts: MessagePart[],
+  now: number,
+  reason: StreamEndReason = 'error',
+): MessagePart[] {
   return parts.map((part) => {
     if (part.type === 'reasoning' && part.durationMs === undefined && part.startedAt) {
-      return { ...part, durationMs: now - part.startedAt }
+      return {
+        ...part,
+        durationMs: now - part.startedAt,
+        ...(reason === 'cancelled' ? { cancelled: true as const } : {}),
+      }
     }
     if (part.type === 'file' && part.status === 'generating') {
+      if (reason === 'cancelled') return { ...part, status: 'cancelled', cancelled: true }
       // Same reasoning as the tool rule below: a placeholder that shimmers forever is a
       // bug the user has to guess at, not a state.
       return {
@@ -376,6 +460,9 @@ function closeDanglingParts(parts: MessagePart[], now: number): MessagePart[] {
       }
     }
     if (part.type === 'tool' && (part.state === 'input-streaming' || part.state === 'executing')) {
+      if (reason === 'cancelled') {
+        return { ...part, ...finaliseToolInput(part), state: 'cancelled', cancelled: true }
+      }
       // The stream ended without a result: surface it as an error rather than an
       // eternally-spinning row.
       return {
@@ -387,6 +474,18 @@ function closeDanglingParts(parts: MessagePart[], now: number): MessagePart[] {
     }
     return part
   })
+}
+
+function statusForFinishReason(finishReason: string | undefined): ChatMessage['status'] {
+  if (finishReason === 'cancelled') return 'aborted'
+  if (finishReason === 'error') return 'error'
+  return 'complete'
+}
+
+function closeReasonForFinishReason(finishReason: string | undefined): StreamEndReason {
+  if (finishReason === 'cancelled') return 'cancelled'
+  if (finishReason === 'error') return 'error'
+  return 'normal'
 }
 
 function setPath(

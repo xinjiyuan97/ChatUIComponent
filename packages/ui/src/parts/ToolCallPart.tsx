@@ -5,7 +5,7 @@ import { useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { formatDuration, summarizeToolInput } from '../lib/format'
-import { AlertIcon, CheckIcon, SpinnerIcon, ToolIcon } from '../icons'
+import { AlertIcon, CheckIcon, SpinnerIcon, StopIcon, ToolIcon } from '../icons'
 import { Collapsible } from '../primitives/Collapsible'
 import { useChatTheme } from '../provider/ChatThemeProvider'
 import type { ToolDefinition, ToolMotion, ToolTone, ToolVariant } from '../provider/tools'
@@ -60,8 +60,10 @@ export function ToolCallPart({ part, message, variant, className }: ToolCallPart
   const Custom = def?.render
   if (Custom) return <Custom part={part} message={message} />
 
-  const running = RUNNING.includes(part.state)
-  const failed = part.state === 'output-error'
+  const cancelled = part.cancelled || part.state === 'cancelled'
+  const running = !cancelled && RUNNING.includes(part.state)
+  const failed = !cancelled && part.state === 'output-error'
+  const waitingForHost = !cancelled && part.state === 'awaiting-client'
   const summary = def?.summary
     ? def.summary(part)
     : summarizeToolInput(part.input) || truncateRawInput(part.inputText)
@@ -70,7 +72,7 @@ export function ToolCallPart({ part, message, variant, className }: ToolCallPart
 
   const header = (
     <span className="flex min-w-0 flex-1 items-center gap-1.5 text-cc-xs">
-      <ToolGlyphIcon definition={def} state={part.state} />
+      <ToolGlyphIcon definition={def} state={cancelled ? 'cancelled' : part.state} />
       <span
         className={cn(
           'shrink-0 font-cc-mono font-medium',
@@ -91,6 +93,10 @@ export function ToolCallPart({ part, message, variant, className }: ToolCallPart
       <span className="ml-auto flex shrink-0 items-center gap-2 pl-2 text-cc-xs">
         {duration && !running && <span className="tabular-nums text-cc-faint">{duration}</span>}
         {failed && <span className="text-cc-danger">{locale.toolFailed}</span>}
+        {cancelled && <span className="text-cc-muted">{locale.cancelled}</span>}
+        {waitingForHost && (
+          <span className="text-cc-muted">{locale.toolWaiting ?? 'Waiting for host'}</span>
+        )}
       </span>
     </span>
   )
@@ -189,7 +195,7 @@ function ToolGlyphIcon({
   const running = RUNNING.includes(state)
   const glyph = running ? (definition?.runningIcon ?? definition?.icon) : definition?.icon
 
-  if (state === 'output-error' || !glyph) {
+  if (state === 'cancelled' || state === 'output-error' || !glyph) {
     return <StatusIcon state={state} tone={definition?.tone} />
   }
 
@@ -209,6 +215,9 @@ function ToolGlyphIcon({
 }
 
 function StatusIcon({ state, tone }: { state: ToolState; tone?: ToolTone }) {
+  if (state === 'cancelled') {
+    return <StopIcon size={13} className="shrink-0 text-cc-faint" />
+  }
   if (state === 'output-error') {
     return <AlertIcon size={13} className="shrink-0 text-cc-danger" />
   }

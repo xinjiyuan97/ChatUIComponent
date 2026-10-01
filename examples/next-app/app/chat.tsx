@@ -18,10 +18,20 @@ import { defaultA2UIRegistry } from '@xinjiyuan97/chat-ui/a2ui-registry'
 const SUGGESTIONS = ['介绍一下这个组件库', '流式输出是怎么做的', '给我看一张 A2UI 卡片']
 
 export function Chat() {
-  /* Points at this app's own route handler. The route holds the credentials and forwards
-   * the upstream stream — see `app/api/chat/route.ts`. */
-  const transport = useMemo(() => createSSETransport({ url: '/api/chat' }), [])
-  const chat = useChat({ transport })
+  /* Set NEXT_PUBLIC_AGENT_URL for local direct-to-agent development; otherwise preserve the
+   * existing same-origin route and its credentials exactly. */
+  const transport = useMemo(
+    () => createSSETransport({ url: process.env.NEXT_PUBLIC_AGENT_URL || '/api/chat' }),
+    [],
+  )
+  const chat = useChat({
+    transport,
+    onClientTool: async (event, submitResult) => {
+      await submitResult(event.toolCallId, {
+        output: { browser: 'next-app', selection: 'current-page', tool: event.toolCallId },
+      })
+    },
+  })
 
   /* Inline mode: files become data URLs and travel in the request body. That is the right
    * default for screenshots and short logs; point `onUpload` at your own storage before
@@ -41,9 +51,9 @@ export function Chat() {
     <ChatThemeProvider
       locale="zh-CN"
       a2uiRegistry={defaultA2UIRegistry}
+      onPermissionDecision={(resolution) => void chat.submitPermissionDecision(resolution)}
       onA2UIAction={(action, message) => {
-        chat.resolveA2UISurface(message.id, action.surfaceId)
-        void chat.send(`确认：${action.action}`, { body: { formData: action.formData } })
+        void chat.submitA2UIAction(message.id, action)
       }}
       asFragment
     >

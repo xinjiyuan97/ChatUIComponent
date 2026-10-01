@@ -5,6 +5,7 @@
      * with it, since the inherited one points at the repo root. */
     "baseUrl": ".",
     "paths": {
+      "@storybook/test": ["../../node_modules/.pnpm/node_modules/@storybook/test"],
       "@xinjiyuan97/chat-core": ["../../packages/core/src/index.ts"],
       "@xinjiyuan97/chat-a2ui": ["../../packages/a2ui/src/index.ts"],
       "@xinjiyuan97/chat-ui": ["../../packages/ui/src/index.ts"],

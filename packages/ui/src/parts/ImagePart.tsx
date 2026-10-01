@@ -7,6 +7,7 @@ import { cn } from '../lib/cn'
 import { AlertIcon, ImageOffIcon } from '../icons'
 import { ImageSkeleton, ImageSkeletonFill, reservedBoxStyle } from '../primitives/ImageSkeleton'
 import { useLocale } from '../provider/ChatThemeProvider'
+import { CancelledFile } from './CancelledFile'
 
 /** Matches `ImageSkeleton`'s default cap, so placeholder and image agree on the box. */
 const MAX_HEIGHT = 320
@@ -38,6 +39,10 @@ export function ImagePart({ part, className }: ImagePartProps) {
     setLoaded(false)
     setBroken(false)
   }, [url])
+
+  if (part.cancelled || part.status === 'cancelled') {
+    return <CancelledFile name={part.name} className={className} />
+  }
 
   /* Two different failures, told apart on purpose. The generator refusing or erroring is
    * an agent-level event the user needs to see and probably act on; an image whose URL
