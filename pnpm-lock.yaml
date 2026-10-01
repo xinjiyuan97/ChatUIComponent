@@ -124,6 +124,8 @@ importers:
         specifier: ^5.4.11
         version: 5.4.21(@types/node@22.20.1)(lightningcss@1.32.0)
 
+  examples/agent-server: {}
+
   examples/next-app:
     dependencies:
       '@xinjiyuan97/chat-a2ui':

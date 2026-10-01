@@ -144,15 +144,15 @@ Cache-Control: no-cache, no-transform
 
 ## 4. 身份与状态
 
-| 标识 | 语义 | 生命周期 |
-|---|---|---|
-| `conversationId` | 长期会话 | 多个 turn |
-| `turnId` | 一次用户意图及其全部工作 | 用户消息、工具、权限等待结束后终止 |
-| `runId` | 一个 turn 的执行尝试 | 重连复用；retry 新建 |
-| `messageId` | 该 turn 的 assistant 消息 | v1 一个 turn 至多一条 |
-| `blockId` | text/reasoning 等内容块 | 同一 message 内稳定 |
-| `eventId` | run 内事件序号 | 严格单调递增 |
-| `inputId` | 客户端动作幂等键 | 服务端 canonical transcript 记录 |
+| 标识             | 语义                      | 生命周期                           |
+| ---------------- | ------------------------- | ---------------------------------- |
+| `conversationId` | 长期会话                  | 多个 turn                          |
+| `turnId`         | 一次用户意图及其全部工作  | 用户消息、工具、权限等待结束后终止 |
+| `runId`          | 一个 turn 的执行尝试      | 重连复用；retry 新建               |
+| `messageId`      | 该 turn 的 assistant 消息 | v1 一个 turn 至多一条              |
+| `blockId`        | text/reasoning 等内容块   | 同一 message 内稳定                |
+| `eventId`        | run 内事件序号            | 严格单调递增                       |
+| `inputId`        | 客户端动作幂等键          | 服务端 canonical transcript 记录   |
 
 turn 和 run 的规则：
 
@@ -200,32 +200,32 @@ type EventEnvelope = {
 下面的事件基于现有 `packages/core/src/events.ts`。标记含义：`现存` 表示当前
 事件已有；`变更` 表示保留事件名但增加或收紧字段；`新增` 表示当前没有。
 
-| 类型 | 状态 | v1 语义 |
-|---|---|---|
-| `message-start` | 变更 | `messageId`，可带 `id` 兼容现有字段；一个 turn 至多一次 |
-| `text-start` | 变更 | 可带 `blockId` |
-| `text-delta` | 变更 | `delta`，可带 `blockId` |
-| `text-end` | 变更 | 可带 `blockId` |
-| `reasoning-start` | 变更 | `blockId`、`redacted?`、`provider?`、`metadata?` |
-| `reasoning-delta` | 变更 | `delta`、`blockId` |
-| `reasoning-end` | 变更 | `blockId`、`redacted?`、`signature?`、`provider?`、`metadata?` |
-| `tool-input-start` | 变更 | `toolCallId`、`name`、`execution: 'server'|'client'`、可选 `blockId` |
-| `tool-input-delta` | 变更 | `toolCallId`、原始 JSON `delta` |
+| 类型                   | 状态 | v1 语义                                                                   |
+| ---------------------- | ---- | ------------------------------------------------------------------------- |
+| `message-start`        | 变更 | `messageId`，可带 `id` 兼容现有字段；一个 turn 至多一次                   |
+| `text-start`           | 变更 | 可带 `blockId`                                                            |
+| `text-delta`           | 变更 | `delta`，可带 `blockId`                                                   |
+| `text-end`             | 变更 | 可带 `blockId`                                                            |
+| `reasoning-start`      | 变更 | `blockId`、`redacted?`、`provider?`、`metadata?`                          |
+| `reasoning-delta`      | 变更 | `delta`、`blockId`                                                        |
+| `reasoning-end`        | 变更 | `blockId`、`redacted?`、`signature?`、`provider?`、`metadata?`            |
+| `tool-input-start`     | 变更 | `toolCallId`、`name`、`execution: 'server'                                | 'client'`、可选 `blockId` |
+| `tool-input-delta`     | 变更 | `toolCallId`、原始 JSON `delta`                                           |
 | `tool-input-available` | 现存 | `toolCallId`、解析后的 `input`；client tool 不得随后收到 `tool-executing` |
-| `tool-executing` | 现存 | 仅 `execution:'server'` 的工具可发送 |
-| `tool-output` | 现存 | server tool 的结果；client tool 由服务端收到 `tool-result` 后确认 |
-| `tool-error` | 现存 | 单工具失败，不自动终止 turn |
-| `a2ui` | 变更 | `surfaceId`、spec、data?，可声明 action 处理方式 |
-| `a2ui-patch` | 现存 | 按 `surfaceId` 更新已有 surface |
-| `permission-request` | 现存 | request id 必须稳定；可重发以原地更新 |
-| `permission-resolved` | 现存 | `requestId`、标准 resolution；可由服务端或其他设备回灌 |
-| `todo` | 现存 | 同一 `todoId` 原地替换 |
-| `file` | 现存 | 同一 `id` 原地替换；文件状态按 generating/ready/error 变化 |
-| `source` | 现存 | 引用来源，不代表权限或可信度 |
-| `custom` | 现存 | host 扩展；不能承载协议必需语义 |
-| `message-end` | 变更 | `finishReason`、整个 turn 的累计 `usage`；终局只能一次 |
-| `error` | 变更 | 结构化错误，见第 9 节；终局错误后不得再发业务事件 |
-| `server-hello` | 新增 | 首帧能力和限制，见第 8 节 |
+| `tool-executing`       | 现存 | 仅 `execution:'server'` 的工具可发送                                      |
+| `tool-output`          | 现存 | server tool 的结果；client tool 由服务端收到 `tool-result` 后确认         |
+| `tool-error`           | 现存 | 单工具失败，不自动终止 turn                                               |
+| `a2ui`                 | 变更 | `surfaceId`、spec、data?，可声明 action 处理方式                          |
+| `a2ui-patch`           | 现存 | 按 `surfaceId` 更新已有 surface                                           |
+| `permission-request`   | 现存 | request id 必须稳定；可重发以原地更新                                     |
+| `permission-resolved`  | 现存 | `requestId`、标准 resolution；可由服务端或其他设备回灌                    |
+| `todo`                 | 现存 | 同一 `todoId` 原地替换                                                    |
+| `file`                 | 现存 | 同一 `id` 原地替换；文件状态按 generating/ready/error 变化                |
+| `source`               | 现存 | 引用来源，不代表权限或可信度                                              |
+| `custom`               | 现存 | host 扩展；不能承载协议必需语义                                           |
+| `message-end`          | 变更 | `finishReason`、整个 turn 的累计 `usage`；终局只能一次                    |
+| `error`                | 变更 | 结构化错误，见第 9 节；终局错误后不得再发业务事件                         |
+| `server-hello`         | 新增 | 首帧能力和限制，见第 8 节                                                 |
 
 ### 5.1 blockId 与顺序
 
@@ -381,4 +381,3 @@ type 不可信，服务端必须自行校验。
 - 分步 usage 的 UI 展示。
 - 多设备实时协同审批和冲突解决。
 - 真正的并发 block 渲染；协议先定义 blockId，面向当前 UI 时服务端保证同类 block 不交错。
-

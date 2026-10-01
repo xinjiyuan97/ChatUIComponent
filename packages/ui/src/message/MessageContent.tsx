@@ -85,14 +85,7 @@ export function MessageContent({
             case 'tool':
               return <ToolCallPart key={index} part={part} message={message} />
             case 'a2ui':
-              return (
-                <A2UIPart
-                  key={index}
-                  part={part}
-                  message={message}
-                  onAction={onA2UIAction}
-                />
-              )
+              return <A2UIPart key={index} part={part} message={message} onAction={onA2UIAction} />
             case 'permission':
               return (
                 <PermissionPart

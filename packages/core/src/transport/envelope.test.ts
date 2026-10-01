@@ -34,9 +34,13 @@ const envelopeRequest = {
   runId: 'run_1',
   capabilities: { blockIds: true, resume: true, clientTools: false, a2ui: true },
   resume: { lastEventId: 12 },
-  input: [{
-    type: 'cancel', inputId: 'input_1', reason: 'stop',
-  }] as ChatInput[],
+  input: [
+    {
+      type: 'cancel',
+      inputId: 'input_1',
+      reason: 'stop',
+    },
+  ] as ChatInput[],
 } as unknown as SendRequest
 
 describe('agent-chat request envelope', () => {
@@ -83,16 +87,26 @@ describe('agent-chat request envelope', () => {
   })
 
   it.each([
-    ['openai', (options: { url: string; fetch: typeof globalThis.fetch }) => createOpenAITransport(options)],
-    ['anthropic', (options: { url: string; fetch: typeof globalThis.fetch }) => createAnthropicTransport(options)],
-  ])('does not send agent-chat fields to the %s provider transport', async (_name, createTransport) => {
-    const captured = captureFetch()
-    const transport = createTransport({ url: '/provider', fetch: captured.fetch })
+    [
+      'openai',
+      (options: { url: string; fetch: typeof globalThis.fetch }) => createOpenAITransport(options),
+    ],
+    [
+      'anthropic',
+      (options: { url: string; fetch: typeof globalThis.fetch }) =>
+        createAnthropicTransport(options),
+    ],
+  ])(
+    'does not send agent-chat fields to the %s provider transport',
+    async (_name, createTransport) => {
+      const captured = captureFetch()
+      const transport = createTransport({ url: '/provider', fetch: captured.fetch })
 
-    for await (const _event of transport.send(envelopeRequest, context)) void _event
+      for await (const _event of transport.send(envelopeRequest, context)) void _event
 
-    expect(JSON.parse(captured.body() as string)).toEqual({ messages: [] })
-  })
+      expect(JSON.parse(captured.body() as string)).toEqual({ messages: [] })
+    },
+  )
 
   it('sends typed input from store send options', async () => {
     let seen: SendRequest | undefined
