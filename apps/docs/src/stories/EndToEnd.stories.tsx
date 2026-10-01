@@ -329,6 +329,7 @@ const WORKSPACE_PANELS: PanelRegistry = {
 }
 
 function WorkspaceDemo() {
+  const [conversations, setConversations] = useState(() => CONVERSATIONS.slice(0, 10))
   const [activeId, setActiveId] = useState(CONVERSATIONS[0]?.id)
   const panel = useSidePanel()
   const demo = useDemoChat()
@@ -371,7 +372,7 @@ function WorkspaceDemo() {
     openTree()
   }, [openTree])
 
-  const title = CONVERSATIONS.find((entry) => entry.id === activeId)?.title ?? '新对话'
+  const title = conversations.find((entry) => entry.id === activeId)?.title ?? '新对话'
 
   return (
     <ChatThemeProvider
@@ -384,10 +385,26 @@ function WorkspaceDemo() {
       <ChatWorkspace
         sidebar={
           <ConversationSidebar
-            conversations={CONVERSATIONS.slice(0, 10)}
+            conversations={conversations}
             activeId={activeId}
             onSelect={setActiveId}
             onNewChat={() => setActiveId(undefined)}
+            onRename={(id, title) =>
+              setConversations((list) =>
+                list.map((entry) => (entry.id === id ? { ...entry, title } : entry)),
+              )
+            }
+            onTogglePin={(id) =>
+              setConversations((list) =>
+                list.map((entry) =>
+                  entry.id === id ? { ...entry, pinned: !entry.pinned } : entry,
+                ),
+              )
+            }
+            onDelete={(id) => {
+              setConversations((list) => list.filter((entry) => entry.id !== id))
+              setActiveId((current) => (current === id ? undefined : current))
+            }}
             now={NOW}
           />
         }
