@@ -1,6 +1,6 @@
 {
   "name": "@xinjiyuan97/chat-core",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Headless state, streaming transports and hooks for agent chat UIs.",
   "license": "MIT",
   "keywords": [
