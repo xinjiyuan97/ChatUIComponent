@@ -1,0 +1,1005 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>多 Agent 编排范式原型</title>
+<style>
+/* ============================================================
+   Tokens — roles lifted from ChatUIComponent's calm layout.
+   Accent appears in exactly two places per view: the primary
+   action + the active item. Agent hues are IDENTITY, not accent.
+   ============================================================ */
+:root{
+  --canvas:#faf9f7; --surface:#ffffff; --subtle:#f4f2ef; --sunken:#ecebe7;
+  --border:rgba(28,25,23,.08); --border-strong:rgba(28,25,23,.22);
+  --fg:#1c1917; --muted:#6b6560; --faint:#948d86;
+  --accent:#2f6df6; --accent-bg:rgba(47,109,246,.09);
+  --warn:#b45309; --warn-bg:rgba(180,83,9,.08);
+  --danger:#c2361d; --ok:#15803d;
+  --r-xs:6px; --r-sm:8px; --r-md:12px; --r-lg:16px; --r-bubble:18px;
+  --sh-card:0 1px 2px rgba(28,25,23,.05);
+  --sh-raised:0 1px 2px rgba(28,25,23,.06),0 4px 12px rgba(28,25,23,.06);
+  --ease:cubic-bezier(0.32,0.72,0,1);
+  --d1:150ms; --d2:200ms; --d3:240ms;
+
+  --a-arch:#d97757; --a-sec:#7c3aed; --a-perf:#0f9d76; --a-res:#b7791f;
+  --a-risk:#e11d48; --a-bill:#0d9488; --a-front:#64748b;
+}
+[data-theme="dark"]{
+  --canvas:#131316; --surface:#1b1b20; --subtle:#232329; --sunken:#2b2b31;
+  --border:rgba(255,255,255,.09); --border-strong:rgba(255,255,255,.26);
+  --fg:#ececf1; --muted:#a0a0ab; --faint:#74747f;
+  --accent:#6b9bff; --accent-bg:rgba(107,155,255,.14);
+  --warn:#e0a458; --warn-bg:rgba(224,164,88,.12);
+  --danger:#f0715c; --ok:#4ade80;
+  --sh-card:0 1px 2px rgba(0,0,0,.3);
+  --sh-raised:0 1px 2px rgba(0,0,0,.35),0 4px 12px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--canvas); color:var(--fg);
+  font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  transition:background var(--d1) var(--ease), color var(--d1) var(--ease);
+}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+.t-s{font-size:13px;line-height:1.5}
+.t-xs{font-size:12px;line-height:1.45}
+.muted{color:var(--muted)} .faint{color:var(--faint)}
+
+/* ---------- app chrome ---------- */
+.apphead{
+  display:flex;align-items:center;gap:10px;
+  padding:11px 20px;background:var(--surface);
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:40;
+}
+.brand{font-size:13.5px;font-weight:600;letter-spacing:.02em}
+.apphead .spacer{flex:1}
+.iconbtn{
+  width:30px;height:30px;border-radius:var(--r-sm);
+  display:grid;place-items:center;font-size:14px;color:var(--muted);
+  transition:background var(--d1) var(--ease),color var(--d1) var(--ease);
+}
+.iconbtn:hover{background:var(--subtle);color:var(--fg)}
+
+/* paradigm switcher — segmented; the ACTIVE one is the one accent
+   allowed in the chrome. */
+.tabs{display:flex;gap:2px;background:var(--subtle);padding:3px;border-radius:var(--r-sm)}
+.tab{
+  padding:5px 13px;border-radius:var(--r-xs);font-size:12.5px;color:var(--muted);
+  transition:background var(--d1) var(--ease),color var(--d1) var(--ease);
+  white-space:nowrap;
+}
+.tab:hover{color:var(--fg)}
+.tab.on{background:var(--surface);color:var(--fg);box-shadow:var(--sh-card)}
+
+.shell{max-width:1180px;margin:0 auto;padding:18px 20px 40px}
+
+/* ---------- shared bits ---------- */
+.av{
+  width:28px;height:28px;border-radius:10px;flex-shrink:0;
+  display:grid;place-items:center;font-size:11px;font-weight:600;color:#fff;
+  letter-spacing:.02em;
+}
+.av.sm{width:22px;height:22px;border-radius:8px;font-size:9.5px}
+.av.lg{width:34px;height:34px;border-radius:11px;font-size:12.5px}
+.nm{font-size:13.5px;font-weight:600;letter-spacing:.02em}
+.mdl{font-size:11px;color:var(--faint);font-weight:400}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-card)}
+.pad{padding:14px 16px}
+
+.chip{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:2px 8px;border-radius:9999px;font-size:11.5px;
+  background:var(--subtle);color:var(--muted);border:1px solid transparent;
+  transition:background var(--d1) var(--ease),color var(--d1) var(--ease),border-color var(--d1) var(--ease);
+}
+.chip.line{background:transparent;border-color:var(--border)}
+.chip.acc{background:var(--accent-bg);color:var(--accent)}
+.chip.warn{background:var(--warn-bg);color:var(--warn)}
+.chip .dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+button.chip:hover{background:var(--sunken);color:var(--fg)}
+
+.rule{height:1px;background:var(--border);margin:0}
+
+/* thin-line disclosure (rule 2) */
+.disc > .disc-h{
+  display:flex;align-items:center;gap:6px;
+  font-size:13px;color:var(--muted);cursor:pointer;
+  padding:4px 0;transition:color var(--d1) var(--ease);
+}
+.disc > .disc-h:hover{color:var(--fg)}
+.disc .chev{display:inline-block;font-size:9px;transition:transform var(--d1) var(--ease);color:var(--faint)}
+.disc[data-open="1"] .chev{transform:rotate(90deg)}
+.disc > .disc-b{display:none}
+.disc[data-open="1"] > .disc-b{
+  display:block;margin-left:6px;border-left:1px solid var(--border);padding-left:14px;
+}
+.disc-h .aux{margin-left:auto;font-size:11.5px;color:var(--faint);font-variant-numeric:tabular-nums}
+
+/* section label */
+.seclabel{
+  font-size:10px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--faint);font-weight:600;margin-bottom:7px;
+}
+
+/* ============================================================
+   PARADIGM 1 — DEBATE
+   ============================================================ */
+.roster{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  padding:11px 14px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-card);
+}
+.part{display:flex;align-items:center;gap:7px}
+.part .meta{display:flex;flex-direction:column;line-height:1.2}
+.part .state{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:10.5px;color:var(--muted);margin-top:1px;
+}
+.st-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.st-speak{background:var(--a-arch)}
+.st-think{background:var(--faint)}
+.st-hand{background:var(--warn)}
+.st-done{background:var(--ok)}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.82)}}
+.st-speak{animation:pulse 1.3s var(--ease) infinite}
+@media (prefers-reduced-motion:reduce){.st-speak{animation:none}}
+
+.floor{
+  margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:9px 14px;border-radius:var(--r-md);
+  background:var(--subtle);border:1px solid var(--border);
+}
+.floor .lead{font-size:12.5px;font-weight:600;color:var(--fg)}
+.floor .sep{width:1px;height:14px;background:var(--border-strong);opacity:.35}
+.floor .q{font-size:11.5px;color:var(--muted)}
+
+.viewtog{margin-left:auto;display:flex;gap:2px;background:var(--surface);padding:2px;border-radius:var(--r-xs);border:1px solid var(--border)}
+.viewtog button{padding:3px 9px;border-radius:5px;font-size:11px;color:var(--muted);transition:all var(--d1) var(--ease)}
+.viewtog button.on{background:var(--sunken);color:var(--fg)}
+
+/* debate board: main column + human comment rail (same grid row ⇒ scrolls together) */
+.board{display:grid;grid-template-columns:1fr 246px;gap:16px;align-items:start}
+.stream{min-width:0;display:flex;flex-direction:column;gap:2px}
+
+.round{margin-top:14px}
+.round > .disc-h{font-size:12px;font-weight:600;color:var(--muted);padding:6px 0}
+.round.cur > .disc-h{color:var(--fg)}
+
+.msg{display:grid;grid-template-columns:1fr 246px;gap:16px;align-items:start;padding:9px 0}
+.msg .main{display:flex;gap:11px;min-width:0}
+.msg .body{min-width:0;flex:1}
+.msg .head{display:flex;align-items:baseline;gap:7px;margin-bottom:3px;flex-wrap:wrap}
+.msg .txt{color:var(--fg)}
+.msg .acts{display:flex;gap:4px;margin-top:6px;opacity:0;transition:opacity var(--d1) var(--ease)}
+.msg:hover .acts{opacity:1}
+.acts button{
+  font-size:11px;color:var(--faint);padding:2px 6px;border-radius:5px;
+  transition:background var(--d1) var(--ease),color var(--d1) var(--ease);
+}
+.acts button:hover{background:var(--subtle);color:var(--fg)}
+.acts button.accent{color:var(--accent)}
+
+/* lane gutter = the visual carrier of the LANE concept */
+.lane{position:relative;padding-left:11px}
+.lane::before{
+  content:"";position:absolute;left:0;top:2px;bottom:2px;width:2px;border-radius:2px;
+  background:var(--lane,var(--border));
+}
+.msg.user{grid-template-columns:1fr 246px}
+.bubble{
+  background:var(--subtle);border-radius:var(--r-bubble);
+  padding:10px 14px;min-width:64px;max-width:80%;
+  margin-left:auto;display:block;width:fit-content;
+}
+
+.rebut{
+  display:flex;width:fit-content;align-items:center;gap:5px;
+  font-size:11.5px;color:var(--muted);background:var(--subtle);
+  border-radius:var(--r-xs);padding:3px 8px;margin-bottom:6px;
+  cursor:pointer;transition:background var(--d1) var(--ease),color var(--d1) var(--ease);
+}
+.rebut:hover{background:var(--sunken);color:var(--fg)}
+@keyframes flash{0%,100%{background:transparent}30%{background:var(--accent-bg)}}
+.msg.flash{animation:flash 1.1s var(--ease)}
+
+.stances{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}
+.stance{
+  display:inline-flex;align-items:center;gap:5px;font-size:11.5px;
+  padding:3px 9px;border-radius:9999px;border:1px solid var(--border);
+  background:var(--surface);color:var(--muted);transition:all var(--d1) var(--ease);cursor:pointer;
+}
+.stance:hover{border-color:var(--border-strong);color:var(--fg)}
+.stance b{font-weight:600;font-variant-numeric:tabular-nums}
+.stance.ye{color:var(--ok)} .stance.no{color:var(--danger)}
+
+/* parallel lanes */
+.par{margin:10px 0 4px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface);overflow:hidden}
+.par > .ph{
+  display:flex;align-items:center;gap:7px;padding:7px 12px;
+  border-bottom:1px solid var(--border);font-size:11.5px;color:var(--muted);
+  background:var(--subtle);
+}
+.par > .pb{padding:10px 12px}
+.par.lanes > .pb{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.par.merged > .pb{display:block}
+.par.lanes .col + .col{border-left:1px solid var(--border);padding-left:14px}
+.par.merged .col + .col{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+
+/* consensus part — structured, NOT a chat message */
+.consensus{margin-top:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-card);overflow:hidden}
+.consensus > .ch{padding:11px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.consensus .grid{display:grid;grid-template-columns:1fr 1fr}
+.consensus .cell{padding:12px 15px}
+.consensus .cell + .cell{border-left:1px solid var(--border)}
+.consensus .li{display:flex;gap:8px;padding:5px 0;font-size:13px}
+.consensus .idx{color:var(--faint);font-variant-numeric:tabular-nums;flex-shrink:0}
+
+/* comment rail */
+.rail{display:flex;flex-direction:column;gap:8px;min-width:0}
+.cc{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);
+  padding:9px 11px;font-size:12px;box-shadow:var(--sh-card);
+  animation:rise var(--d3) var(--ease);
+}
+@keyframes rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.cc .q{
+  border-left:3px solid var(--accent);background:var(--accent-bg);
+  padding:4px 8px;border-radius:3px;font-size:11px;color:var(--muted);
+  margin-bottom:7px;
+}
+.cc .ql{font-size:9px;font-weight:600;color:var(--accent);letter-spacing:.05em;display:block;margin-bottom:2px}
+.cc .row{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.cc .who{font-weight:600} .cc .at{margin-left:auto;font-size:10px;color:var(--faint)}
+.cc .fill{background:var(--subtle);border:1px dashed var(--border-strong);border-radius:var(--r-xs);
+  padding:6px 8px;font-size:11.5px;color:var(--faint)}
+
+/* composer */
+.composer{margin-top:18px}
+.chead{display:flex;align-items:center;gap:7px;margin-bottom:7px;flex-wrap:wrap}
+.box{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
+  box-shadow:var(--sh-card);transition:border-color var(--d1) var(--ease),box-shadow var(--d1) var(--ease);
+}
+.box:focus-within{border-color:var(--border-strong);box-shadow:var(--sh-raised)}
+.box .ph{padding:13px 14px 4px;color:var(--faint);font-size:14px;min-height:46px}
+.box .foot{display:flex;align-items:center;gap:7px;padding:6px 14px 10px}
+.box .foot .sp{flex:1}
+.send{
+  width:32px;height:32px;border-radius:9999px;display:grid;place-items:center;
+  background:var(--sunken);color:var(--faint);font-size:13px;
+  transition:transform var(--d1) var(--ease),background var(--d1) var(--ease),color var(--d1) var(--ease);
+}
+.send.has{background:var(--accent);color:#fff}
+.send:active{transform:scale(.95)}
+.hint{font-size:12px;color:var(--faint);margin-top:7px}
+
+/* ============================================================
+   PARADIGM 2 — DISPATCH
+   ============================================================ */
+.rollup{display:grid;grid-template-columns:repeat(5,1fr);background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-card);overflow:hidden}
+.rollup .cell{padding:13px 0;text-align:center;position:relative}
+.rollup .cell + .cell::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:1px;background:var(--border)}
+.rollup .v{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.rollup .k{font-size:10px;letter-spacing:.06em;color:var(--faint);margin-top:2px}
+
+.queue{display:flex;align-items:center;gap:9px;margin-top:12px;padding:10px 14px;
+  background:var(--surface);border:1px dashed var(--border-strong);border-radius:var(--r-md)}
+.queue .qi{display:flex;align-items:center;gap:7px;padding:4px 9px;background:var(--subtle);border-radius:var(--r-xs);font-size:12px}
+
+.board2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:16px;align-items:start}
+.col2{min-width:0}
+.colh{display:flex;align-items:center;gap:7px;padding:0 2px 9px}
+.colh .cnt{margin-left:auto;font-size:11.5px;color:var(--faint);font-variant-numeric:tabular-nums}
+.colbody{display:flex;flex-direction:column;gap:10px}
+
+.task{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);
+  box-shadow:var(--sh-card);overflow:hidden;transition:box-shadow var(--d1) var(--ease)}
+.task:hover{box-shadow:var(--sh-raised)}
+.task .th{padding:11px 13px}
+.task .t1{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}
+.task .tt{font-size:13.5px;font-weight:600;letter-spacing:.02em}
+.task .t2{display:flex;align-items:center;gap:7px;margin-top:8px;flex-wrap:wrap}
+.task .meta{margin-left:auto;font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums}
+.task.blk{border-color:var(--warn);border-left:2px solid var(--warn)}
+.task.blk .th{padding-left:12px}
+.task .tbar{display:flex;gap:4px;padding:7px 13px;border-top:1px solid var(--border);background:var(--subtle)}
+.task .tbar button{font-size:11px;color:var(--muted);padding:3px 8px;border-radius:var(--r-xs);
+  transition:background var(--d1) var(--ease),color var(--d1) var(--ease)}
+.task .tbar button:hover{background:var(--surface);color:var(--fg)}
+
+.sublane{padding:10px 13px;border-top:1px solid var(--border)}
+.sublane .ln{display:flex;gap:9px;padding:5px 0}
+
+.esc{padding:11px 13px;border-top:1px solid var(--border);background:var(--warn-bg)}
+.esc .q{font-size:12.5px;margin:6px 0 9px}
+.esc .row{display:flex;gap:6px;flex-wrap:wrap}
+.esc button{font-size:11.5px;padding:4px 10px;border-radius:var(--r-xs);border:1px solid var(--border-strong);
+  background:var(--surface);color:var(--fg);transition:all var(--d1) var(--ease)}
+.esc button:hover{border-color:var(--fg)}
+.esc button.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+
+.arts{margin-top:16px}
+.art{display:flex;align-items:center;gap:10px;padding:9px 13px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--r-md);box-shadow:var(--sh-card)}
+.art + .art{margin-top:8px}
+.art .an{flex:1;min-width:0}
+.art .ad{font-size:11px;color:var(--faint)}
+
+/* ============================================================
+   PARADIGM 3 — SWARM
+   ============================================================ */
+.trail{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding:2px}
+.tnode{display:flex;align-items:center;gap:0;flex-shrink:0}
+.tstep{display:flex;align-items:center;gap:9px;padding:11px 14px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--r-md);box-shadow:var(--sh-card);min-width:0}
+.tstep.cur{border-color:var(--accent);box-shadow:var(--sh-raised)}
+.tstep .col{display:flex;flex-direction:column;line-height:1.25}
+.tedge{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:0 10px;min-width:96px;color:var(--faint)}
+.tedge .lbl{font-size:10.5px;color:var(--muted);text-align:center;line-height:1.3}
+.tedge .ln{display:flex;align-items:center;gap:3px;margin-top:3px}
+.tedge .ln i{display:block;width:22px;height:1px;background:var(--border-strong)}
+.tedge .ln s{font-size:9px;text-decoration:none;color:var(--faint)}
+
+.handler{display:flex;align-items:center;gap:10px;margin-top:12px;padding:11px 14px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:var(--sh-card)}
+.handler .lead{font-size:12px;color:var(--muted)}
+
+.handoff{margin-top:14px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);box-shadow:var(--sh-card);overflow:hidden}
+.handoff .hh{padding:11px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.handoff .hb{padding:12px 15px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.handoff .grp .seclabel{margin-bottom:5px}
+.handoff .li{display:flex;gap:8px;padding:4px 0;font-size:12.5px}
+.handoff .mk{flex-shrink:0;font-size:11px;width:13px}
+.missing .li{color:var(--warn)}
+.missing .grp{background:var(--warn-bg);border-radius:var(--r-sm);padding:9px 11px;margin:-3px -3px 0}
+
+.caps{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.cap{padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:var(--sh-card)}
+.cap .cn{display:flex;align-items:center;gap:7px}
+.cap .tg{display:flex;gap:4px;flex-wrap:wrap;margin-top:7px}
+.cap .tg .chip{font-size:10.5px;padding:1px 7px}
+.cap.off{opacity:.55}
+
+.ctrlbar{display:flex;align-items:center;gap:7px;margin-top:16px;padding:9px 13px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:var(--sh-card)}
+.ctrlbar button{font-size:12px;color:var(--muted);padding:4px 10px;border-radius:var(--r-xs);
+  border:1px solid transparent;transition:all var(--d1) var(--ease)}
+.ctrlbar button:hover{background:var(--subtle);color:var(--fg)}
+.ctrlbar button.stop:hover{background:var(--warn-bg);color:var(--warn)}
+.ctrlbar .sp{flex:1}
+
+.notice{margin-top:12px;padding:10px 13px;border-radius:var(--r-md);background:var(--warn-bg);
+  border:1px solid transparent;font-size:12.5px;color:var(--warn);display:flex;gap:8px;align-items:flex-start}
+
+.hidden{display:none}
+.foot{max-width:1180px;margin:0 auto;padding:0 20px 44px;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+
+<header class="apphead">
+  <span class="brand">多 Agent 编排</span>
+  <div class="tabs">
+    <button class="tab on" data-tab="debate">辩论式群聊</button>
+    <button class="tab" data-tab="dispatch">派发式</button>
+    <button class="tab" data-tab="swarm">路由式</button>
+  </div>
+  <div class="spacer"></div>
+  <span class="t-xs faint" style="margin-right:4px">原型 · 非真实数据</span>
+  <button class="iconbtn" id="theme" title="切换主题">◐</button>
+</header>
+
+<div class="shell">
+
+<!-- ══════════════════ 1. DEBATE ══════════════════ -->
+<section id="p-debate">
+
+  <!-- participant roster -->
+  <div class="roster">
+    <div class="part">
+      <div class="av" style="background:var(--a-arch)">架</div>
+      <div class="meta"><span class="nm">架构师</span><span class="mdl">Claude Sonnet 4</span>
+        <span class="state"><i class="st-dot st-speak"></i>发言中</span></div>
+    </div>
+    <div class="part">
+      <div class="av" style="background:var(--a-sec)">安</div>
+      <div class="meta"><span class="nm">安全</span><span class="mdl">GLM-5.2</span>
+        <span class="state"><i class="st-dot st-hand"></i>已举手 · 排队 2</span></div>
+    </div>
+    <div class="part">
+      <div class="av" style="background:var(--a-perf)">性</div>
+      <div class="meta"><span class="nm">性能</span><span class="mdl">DeepSeek V3</span>
+        <span class="state"><i class="st-dot st-hand"></i>已举手 · 排队 3</span></div>
+    </div>
+    <div class="part">
+      <div class="av" style="background:var(--a-res)">研</div>
+      <div class="meta"><span class="nm">研究者</span><span class="mdl">o4-mini</span>
+        <span class="state"><i class="st-dot st-think"></i>思考中</span></div>
+    </div>
+    <div class="part" style="margin-left:auto">
+      <div class="av" style="background:var(--fg)">我</div>
+      <div class="meta"><span class="nm">你</span><span class="mdl">主持 / 可随时插话</span>
+        <span class="state"><i class="st-dot st-done"></i>在线</span></div>
+    </div>
+  </div>
+
+  <!-- floor indicator — NOT the same as "typing" -->
+  <div class="floor">
+    <span class="lead">发言权</span>
+    <span class="num t-xs muted">第 2 轮 / 共 3 轮</span>
+    <span class="sep"></span>
+    <span class="t-xs muted">当前：<b style="color:var(--a-arch);font-weight:600">架构师</b></span>
+    <span class="sep"></span>
+    <span class="q">排队：安全 → 性能 · 每条限 400 字 · 剩余 <span class="num">01:12</span></span>
+    <div class="viewtog" id="viewtog">
+      <button class="on" data-view="lanes">并排</button>
+      <button data-view="merged">合并</button>
+    </div>
+  </div>
+
+  <!-- debate stream + human comment rail -->
+  <div class="board">
+    <div class="stream">
+
+      <!-- round 1: collapsed -->
+      <div class="round disc" data-open="0">
+        <div class="disc-h"><span class="chev">▶</span>第 1 轮 · 立论
+          <span class="aux num">4 条发言 · 03:20 · 已收敛</span></div>
+        <div class="disc-b">
+          <div class="t-s muted" style="padding:6px 0">
+            架构师提出单写多读；安全要求审计前置；性能主张异步落盘；研究者补了三条外部依据。
+            此轮结论已并入下方「共识 / 分歧」。
+          </div>
+        </div>
+      </div>
+
+      <!-- round 2 -->
+      <div class="round cur disc" data-open="1">
+        <div class="disc-h"><span class="chev">▶</span>第 2 轮 · 交叉质询
+          <span class="aux num">进行中 · 2 路并行</span></div>
+        <div class="disc-b">
+
+          <!-- a normal agent turn (flat, per the asymmetry rule) -->
+          <div class="msg" id="m-arch">
+            <div class="main lane" style="--lane:var(--a-arch)">
+              <div class="av" style="background:var(--a-arch)">架</div>
+              <div class="body">
+                <div class="head">
+                  <span class="nm" style="color:var(--a-arch)">架构师</span>
+                  <span class="mdl">Claude Sonnet 4</span>
+                  <span class="t-xs faint num">14:32</span>
+                </div>
+                <div class="txt">
+                  <div class="rebut" data-to="m-pref">↩ 反驳 <b>@性能</b> · 第 2 点</div>
+                  你担心的是写放大，但<b>读路径才是这个系统的瓶颈</b>。
+                  审计日志本身可以走异步落盘，真正需要同步的是「谁改了哪条状态」这一个指针。
+                  所以我主张：<span style="border-bottom:1px dashed var(--border-strong)">单写多读 + 指针级同步审计</span>。
+                </div>
+                <div class="stances">
+                  <span class="stance ye">✓ 支持 <b>3</b></span>
+                  <span class="stance no">✕ 反对 <b>1</b></span>
+                  <span class="stance">— 中立 <b>1</b></span>
+                </div>
+                <div class="acts">
+                  <button>↩ 回复</button><button>📋 复制</button>
+                  <button class="accent">💬 评论</button>
+                </div>
+              </div>
+            </div>
+            <div class="rail">
+              <div class="cc">
+                <div class="q"><span class="ql">选中文本</span>
+                  「指针级同步审计」这句话没有定义边界</div>
+                <div class="row"><div class="av sm" style="background:var(--fg)">我</div>
+                  <span class="who">你</span><span class="at num">14:33</span></div>
+                <div>请给出「指针」的具体字段，否则安全和性能会在下一轮继续各说各话。</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- parallel lanes — the core of debate -->
+          <div class="par lanes" id="par">
+            <div class="ph">
+              <i class="st-dot st-speak"></i>并行发言 · <span class="num">2</span> 路 · 同轮内允许交错
+              <span style="margin-left:auto" class="t-xs faint">每条独立跑道，互不阻塞</span>
+            </div>
+            <div class="pb">
+              <div class="col lane" style="--lane:var(--a-sec)">
+                <div class="head" style="display:flex;align-items:baseline;gap:7px;margin-bottom:5px">
+                  <div class="av sm" style="background:var(--a-sec)">安</div>
+                  <span class="nm" style="color:var(--a-sec)">安全</span>
+                  <span class="mdl">GLM-5.2</span>
+                </div>
+                <div class="t-s">不反对指针级同步，但<b>审计的写入必须可验证</b>。
+                  如果只同步指针，攻击者可以改写日志本体而不动指针 ——
+                  我要求指针里带日志 chunk 的校验和。</div>
+                <div class="t-xs faint" style="margin-top:8px;display:flex;gap:5px;align-items:center">
+                  <i class="st-dot st-speak"></i>正在生成 · <span class="num">142</span> 字
+                </div>
+                <div class="acts" style="opacity:1"><button class="accent">💬 评论</button></div>
+              </div>
+              <div class="col lane" style="--lane:var(--a-perf)">
+                <div class="head" style="display:flex;align-items:baseline;gap:7px;margin-bottom:5px">
+                  <div class="av sm" style="background:var(--a-perf)">性</div>
+                  <span class="nm" style="color:var(--a-perf)">性能</span>
+                  <span class="mdl">DeepSeek V3</span>
+                </div>
+                <div class="t-s">接受指针级同步。补一个数：校验和每条 <span class="num">32B</span>，
+                  按 <span class="num">5k</span> QPS 算是 <span class="num">160KB/s</span>，
+                  相对日志本体可忽略。</div>
+                <div class="t-xs faint" style="margin-top:8px;display:flex;gap:5px;align-items:center">
+                  <i class="st-dot st-done"></i>已完成 · <span class="num">1.8s</span>
+                </div>
+                <div class="acts" style="opacity:1"><button class="accent">💬 评论</button></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- target of the rebuttal edge -->
+          <div class="msg" id="m-pref">
+            <div class="main lane" style="--lane:var(--a-perf)">
+              <div class="av" style="background:var(--a-perf)">性</div>
+              <div class="body">
+                <div class="head">
+                  <span class="nm" style="color:var(--a-perf)">性能</span>
+                  <span class="mdl">DeepSeek V3</span>
+                  <span class="t-xs faint num">14:31</span>
+                  <span class="chip line" style="margin-left:2px">被引用 1</span>
+                </div>
+                <div class="txt">① 同步审计会带来写放大。<b>② 建议审计走异步落盘</b>，避免阻塞主写路径。</div>
+              </div>
+            </div>
+            <div class="rail"></div>
+          </div>
+
+          <!-- user interjection -->
+          <div class="msg">
+            <div class="main" style="justify-content:flex-end">
+              <div class="bubble">收敛一下：这一轮请只回答「校验和放指针里够不够」，其它问题下一轮再说。</div>
+            </div>
+            <div class="rail"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- no rail on the container level; rails live per message -->
+    <div></div>
+  </div>
+
+  <!-- consensus part: structured, not a message -->
+  <div class="consensus">
+    <div class="ch">
+      <span class="nm">本轮收敛</span>
+      <span class="chip"><i class="dot" style="background:var(--ok)"></i>由主持 agent 生成</span>
+      <span class="t-xs faint num" style="margin-left:auto">更新于 14:35 · 可原地替换</span>
+    </div>
+    <div class="grid">
+      <div class="cell">
+        <div class="seclabel">已一致</div>
+        <div class="li"><span class="idx">1</span><span>写路径保持单写多读</span></div>
+        <div class="li"><span class="idx">2</span><span>审计日志本体异步落盘</span></div>
+        <div class="li"><span class="idx">3</span><span>需要一条同步的“谁改了哪条状态”记录</span></div>
+      </div>
+      <div class="cell">
+        <div class="seclabel">有争议</div>
+        <div class="li"><span class="idx">4</span><span>同步记录里是否必须带日志 chunk 校验和</span></div>
+        <div class="t-xs" style="margin:4px 0 0 21px;display:flex;gap:6px;flex-wrap:wrap">
+          <span class="chip" style="color:var(--a-sec)">安全：必须</span>
+          <span class="chip" style="color:var(--a-perf)">性能：可选，按需开启</span>
+          <span class="chip line">架构师：未表态</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- interjection composer -->
+  <div class="composer">
+    <div class="chead">
+      <span class="seclabel" style="margin:0">插话</span>
+      <button class="chip">@ 架构师</button>
+      <button class="chip">@ 安全</button>
+      <button class="chip">@ 性能</button>
+      <button class="chip line" style="font-weight:600">@ 所有人</button>
+      <button class="chip line">✋ 举手请求发言</button>
+      <button class="chip line">⏸ 暂停辩论</button>
+    </div>
+    <div class="box">
+      <div class="ph">对全场说，或 @ 某个 agent…</div>
+      <div class="foot">
+        <button class="chip line">🎤 延长本轮 1 分钟</button>
+        <div class="sp"></div>
+        <span class="t-xs faint">Enter 发送 · Shift+Enter 换行</span>
+        <button class="send has">↑</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ 2. DISPATCH ══════════════════ -->
+<section id="p-dispatch" class="hidden">
+
+  <div class="rollup">
+    <div class="cell"><div class="v">7<span class="faint" style="font-size:13px">/12</span></div><div class="k">已完成</div></div>
+    <div class="cell"><div class="v">3</div><div class="k">进行中</div></div>
+    <div class="cell"><div class="v" style="color:var(--warn)">2</div><div class="k">已阻塞</div></div>
+    <div class="cell"><div class="v num">04:12</div><div class="k">总用时</div></div>
+    <div class="cell"><div class="v num">$0.142</div><div class="k">成本</div></div>
+  </div>
+
+  <div class="queue">
+    <span class="seclabel" style="margin:0">待派发</span>
+    <span class="qi">① 补写集成测试 <span class="t-xs faint">目标 12</span></span>
+    <span class="qi">② 更新 README 示例</span>
+    <span class="t-xs faint" style="margin-left:auto">supervisor 正在拆解 · 队列由宿主持有</span>
+  </div>
+
+  <div class="board2">
+    <!-- IN PROGRESS -->
+    <div class="col2">
+      <div class="colh"><i class="st-dot st-speak"></i><span class="nm">进行中</span>
+        <span class="cnt">3</span></div>
+      <div class="colbody">
+
+        <div class="task">
+          <div class="th">
+            <div class="t1"><span class="tt">重构鉴权中间件</span>
+              <span class="chip line">第 <b class="num">2</b> 次尝试</span></div>
+            <div class="t2">
+              <div class="av sm" style="background:var(--a-arch)">架</div>
+              <span class="t-xs muted">架构师</span>
+              <span class="meta">已用 <span class="num">1:42</span></span>
+            </div>
+          </div>
+          <!-- lane nested INSIDE the card: the supervisor layout strategy -->
+          <div class="disc sublane" data-open="1">
+            <div class="disc-h"><span class="chev">▶</span>子跑道
+              <span class="aux num">2 步 · 正在流式</span></div>
+            <div class="disc-b">
+              <div class="ln"><div class="av sm" style="background:var(--a-arch)">架</div>
+                <div class="t-s"><span class="muted">思考</span> — 先定位 <code style="font-size:12px">verify()</code> 的三个调用点，确认是否都在同一条中间件链上。</div></div>
+              <div class="ln"><div class="av sm" style="background:var(--a-arch)">架</div>
+                <div class="t-s"><span class="muted">工具</span> — <span class="num">grep -rn verify( src/</span>
+                  <span class="chip line" style="margin-left:6px">执行中</span></div></div>
+            </div>
+          </div>
+          <!-- dispatch bar: these emit HOST inputs, not agent replies -->
+          <div class="tbar">
+            <button>↻ 重新派发</button><button>⇄ 换人</button>
+            <button>↑ 提优先级</button><button>✕ 取消</button>
+          </div>
+        </div>
+
+        <div class="task">
+          <div class="th">
+            <div class="t1"><span class="tt">压测写路径</span></div>
+            <div class="t2"><div class="av sm" style="background:var(--a-perf)">性</div>
+              <span class="t-xs muted">性能</span>
+              <span class="meta">已用 <span class="num">0:38</span></span></div>
+            <div class="t2"><span class="chip line">依赖 ①</span></div>
+          </div>
+          <div class="tbar"><button>↻ 重新派发</button><button>⇄ 换人</button><button>✕ 取消</button></div>
+        </div>
+
+        <div class="task">
+          <div class="th">
+            <div class="t1"><span class="tt">核对三条外部依据</span></div>
+            <div class="t2"><div class="av sm" style="background:var(--a-res)">研</div>
+              <span class="t-xs muted">研究者</span>
+              <span class="meta">已用 <span class="num">0:12</span></span></div>
+          </div>
+          <div class="tbar"><button>↻ 重新派发</button><button>⇄ 换人</button><button>✕ 取消</button></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- BLOCKED -->
+    <div class="col2">
+      <div class="colh"><i class="st-dot st-hand"></i><span class="nm">已阻塞</span>
+        <span class="cnt">2</span></div>
+      <div class="colbody">
+
+        <div class="task blk">
+          <div class="th">
+            <div class="t1"><span class="tt">迁移审计日志格式</span>
+              <span class="chip warn"><i class="dot"></i>需要人工决定</span></div>
+            <div class="t2"><div class="av sm" style="background:var(--a-sec)">安</div>
+              <span class="t-xs muted">安全</span>
+              <span class="meta">已等 <span class="num">2:05</span></span></div>
+          </div>
+          <!-- escalation card extends the existing permission part -->
+          <div class="esc">
+            <div class="t-xs" style="font-weight:600;color:var(--warn)">⚠ 请求决定（原 permission part 扩展）</div>
+            <div class="q">旧日志里有 <b class="num">1,204</b> 条缺 chunk 校验和。
+              是整体回填（约 <span class="num">40</span> 分钟、需停机读取），还是只对新写入生效？</div>
+            <div class="row">
+              <button class="pri">仅对新写入生效</button>
+              <button>整体回填</button>
+              <button>回复说明…</button>
+              <button>↑ 升级给上级 agent</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="task blk">
+          <div class="th">
+            <div class="t1"><span class="tt">改 frontend 的 SSE 解析</span></div>
+            <div class="t2"><span class="chip warn"><i class="dot"></i>被 ③ 阻塞</span>
+              <span class="t-xs faint">等待「重构鉴权中间件」产出签名</span></div>
+          </div>
+          <div class="tbar"><button>↑ 提优先级</button><button>✕ 取消</button><button>⇄ 改派他人</button></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- DONE -->
+    <div class="col2">
+      <div class="colh"><i class="st-dot st-done"></i><span class="nm">已完成</span>
+        <span class="cnt">7</span></div>
+      <div class="colbody">
+        <div class="task">
+          <div class="th">
+            <div class="t1"><span class="tt">补 packages/core 单测</span>
+              <span class="chip"><i class="dot" style="background:var(--ok)"></i>+6 用例</span></div>
+            <div class="t2"><div class="av sm" style="background:var(--a-arch)">架</div>
+              <span class="t-xs muted">架构师</span>
+              <span class="meta num">1:20</span></div>
+          </div>
+          <div class="tbar"><button>↻ 重跑</button><button>👁 查看产物</button></div>
+        </div>
+        <div class="t-xs faint" style="text-align:center;padding:9px 0">还有 <span class="num">6</span> 项，已折叠</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- artifact collector: separate from the chat stream -->
+  <div class="arts">
+    <div class="seclabel">产物（与对话流分离）</div>
+    <div class="art">
+      <span class="chip"><i class="dot" style="background:var(--ok)"></i>patch</span>
+      <div class="an"><div class="t-s">packages/core/src/store.ts</div>
+        <div class="ad num">+42 −8 · 来自「重构鉴权中间件」</div></div>
+      <button class="chip line">查看</button><button class="chip" style="color:var(--fg);font-weight:600">采纳</button><button class="chip line">丢弃</button>
+    </div>
+    <div class="art">
+      <span class="chip"><i class="dot" style="background:var(--ok)"></i>report</span>
+      <div class="an"><div class="t-s">压测结果 load-20261001.csv</div>
+        <div class="ad num">5k QPS · p99 38ms · 来自「压测写路径」</div></div>
+      <button class="chip line">查看</button><button class="chip" style="color:var(--fg);font-weight:600">采纳</button><button class="chip line">丢弃</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ 3. SWARM ══════════════════ -->
+<section id="p-swarm" class="hidden">
+
+  <!-- handoff trail: a trace, not messages -->
+  <div class="seclabel">交接轨迹</div>
+  <div class="trail">
+    <div class="tnode">
+      <div class="tstep">
+        <div class="av" style="background:var(--a-front)">前</div>
+        <div class="col"><span class="nm">前台接待</span><span class="mdl">分类 · 通用</span>
+          <span class="t-xs faint num">14:28 · 停留 40s</span></div>
+      </div>
+      <div class="tedge"><span class="lbl">意图 = 账单争议</span>
+        <div class="ln"><i></i><s>▶</s></div></div>
+    </div>
+    <div class="tnode">
+      <div class="tstep">
+        <div class="av" style="background:var(--a-bill)">账</div>
+        <div class="col"><span class="nm">账单 agent</span><span class="mdl">账单 · 退款</span>
+          <span class="t-xs faint num">14:29 · 停留 4m10s</span></div>
+      </div>
+      <div class="tedge"><span class="lbl">需越权退款</span>
+        <div class="ln"><i></i><s>▶</s></div></div>
+    </div>
+    <div class="tnode">
+      <div class="tstep cur">
+        <div class="av" style="background:var(--a-risk)">风</div>
+        <div class="col"><span class="nm">风控 agent</span><span class="mdl">风控 · 越权审批</span>
+          <span class="t-xs faint num">14:33 至今</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="handler">
+    <span class="lead">当前持有</span>
+    <div class="av sm" style="background:var(--a-risk)">风</div>
+    <span class="nm" style="color:var(--a-risk)">风控 agent</span>
+    <span class="chip line">持有中 · <span class="num">02:14</span></span>
+    <span class="sp" style="flex:1"></span>
+    <button class="chip line">⇄ 手动改派…</button>
+    <button class="chip line">⏸ 冻结在风控</button>
+  </div>
+
+  <!-- context summary: the trust mechanism -->
+  <div class="handoff">
+    <div class="hh">
+      <span class="nm">交接上下文</span>
+      <span class="chip line">账单 → 风控</span>
+      <span class="t-xs faint" style="margin-left:auto">转交时必须显式声明带过去什么、丢了什么</span>
+    </div>
+    <div class="hb">
+      <div class="grp">
+        <div class="seclabel">已携带 · 5 项</div>
+        <div class="li"><span class="mk" style="color:var(--ok)">✓</span><span>订单号 <code style="font-size:12px">ORD-88213</code>、金额 <span class="num">¥1,280</span></span></div>
+        <div class="li"><span class="mk" style="color:var(--ok)">✓</span><span>用户诉求原文（<span class="num">128</span> 字）</span></div>
+        <div class="li"><span class="mk" style="color:var(--ok)">✓</span><span>账单 agent 的判定理由与置信度 <span class="num">0.82</span></span></div>
+        <div class="li"><span class="mk" style="color:var(--ok)">✓</span><span>已核对的两条账单记录</span></div>
+        <div class="li"><span class="mk" style="color:var(--ok)">✓</span><span>用户的越权审批授权状态：未授权</span></div>
+      </div>
+      <div class="grp missing">
+        <div class="seclabel" style="color:var(--warn)">未携带 · 2 项（需确认）</div>
+        <div class="li"><span class="mk">!</span><span>前台与用户的 3 轮寒暄上下文</span></div>
+        <div class="li"><span class="mk">!</span><span>用户此前的历史退款记录（<span class="num">2</span> 次）</span></div>
+        <div class="t-xs" style="margin-top:7px;color:var(--warn)">风控可能因此误判风险等级</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- single lane with inline handoff markers -->
+  <div class="board" style="margin-top:16px">
+    <div class="stream">
+      <div class="msg">
+        <div class="main lane" style="--lane:var(--a-bill)">
+          <div class="av" style="background:var(--a-bill)">账</div>
+          <div class="body">
+            <div class="head"><span class="nm" style="color:var(--a-bill)">账单 agent</span>
+              <span class="mdl">账单 · 退款</span><span class="t-xs faint num">14:32</span></div>
+            <div class="txt">已核对订单与金额，争议成立，应退 <span class="num">¥1,280</span>。
+              但该金额超过我的退款额度上限（<span class="num">¥500</span>），需要风控审批。</div>
+            <div style="margin-top:8px"><span class="chip line">⇄ 发起交接 · 理由：需越权审批</span></div>
+          </div>
+        </div>
+        <div class="rail"></div>
+      </div>
+
+      <div class="msg">
+        <div class="main lane" style="--lane:var(--a-risk)">
+          <div class="av" style="background:var(--a-risk)">风</div>
+          <div class="body">
+            <div class="head"><span class="nm" style="color:var(--a-risk)">风控 agent</span>
+              <span class="mdl">风控 · 越权审批</span><span class="t-xs faint num">14:33</span>
+              <span class="chip line">接手 · 上下文如上</span></div>
+            <div class="txt">
+              <div class="rebut">◈ 路由理由：金额超限 → 风控（规则 <span class="num">R-114</span>）</div>
+              我看到的是「未授权越权退款」。<b>但我拿不到用户的历史退款记录</b>，
+              无法判断是否属于惯犯模式。这一点需要补上下文，否则我不能批准。
+            </div>
+            <div class="acts" style="opacity:1">
+              <button class="accent">💬 评论</button>
+              <button>⇄ 转回账单 agent</button>
+              <button>↑ 升级人工</button>
+            </div>
+          </div>
+        </div>
+        <div class="rail">
+          <div class="cc">
+            <div class="q"><span class="ql">选中文本</span>「拿不到用户的历史退款记录」</div>
+            <div class="row"><div class="av sm" style="background:var(--fg)">我</div>
+              <span class="who">你</span><span class="at num">14:34</span></div>
+            <div>同意，缺上下文不该硬判。把它标成「上下文不足」退给账单 agent 补。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div></div>
+  </div>
+
+  <!-- capability roster -->
+  <div class="seclabel" style="margin-top:16px">可接手的 agent</div>
+  <div class="caps">
+    <div class="cap">
+      <div class="cn"><div class="av sm" style="background:var(--a-front)">前</div>
+        <span class="nm t-s">前台接待</span><i class="st-dot st-done" style="margin-left:auto"></i></div>
+      <div class="tg"><span class="chip">分类</span><span class="chip">寒暄</span></div>
+    </div>
+    <div class="cap">
+      <div class="cn"><div class="av sm" style="background:var(--a-bill)">账</div>
+        <span class="nm t-s">账单 agent</span><i class="st-dot st-done" style="margin-left:auto"></i></div>
+      <div class="tg"><span class="chip">账单</span><span class="chip">退款 ≤500</span></div>
+    </div>
+    <div class="cap" style="border-color:var(--accent)">
+      <div class="cn"><div class="av sm" style="background:var(--a-risk)">风</div>
+        <span class="nm t-s">风控 agent</span><i class="st-dot st-speak" style="margin-left:auto"></i></div>
+      <div class="tg"><span class="chip line">越权审批</span><span class="chip">风险定价</span><span class="chip">反欺诈</span></div>
+    </div>
+    <div class="cap off">
+      <div class="cn"><div class="av sm" style="background:var(--faint)">法</div>
+        <span class="nm t-s">法务 agent</span><i class="st-dot" style="background:var(--faint);margin-left:auto"></i></div>
+      <div class="tg"><span class="chip">合同</span><span class="chip">合规</span></div>
+      <div class="t-xs faint" style="margin-top:6px">离线 · 需人工唤醒</div>
+    </div>
+  </div>
+
+  <div class="notice">
+    <span>⚠</span>
+    <span>兜底策略：若 <span class="num">15</span> 秒内无 agent 接单，或接手方判定「上下文不足」，
+      会话回退到上一持有者并标记 <b>待人工</b>；不会静默丢弃。</span>
+  </div>
+
+  <!-- unified human control plane — present in all three paradigms -->
+  <div class="ctrlbar">
+    <span class="seclabel" style="margin:0 4px 0 0">人类控制面</span>
+    <button>⏸ 暂停全部</button>
+    <button>▶ 放行</button>
+    <button>🎯 接管单个 agent</button>
+    <button>⇄ 手动改派</button>
+    <button class="stop">■ 终止</button>
+    <span class="sp"></span>
+    <span class="t-xs faint">这些是宿主权限，不是 agent 能力</span>
+  </div>
+</section>
+
+</div>
+
+<div class="foot">
+  同一套 token 与布局规则（不对称气泡 · 1px 细线折叠 · 单一强调色 · 一条缓动曲线 · tabular 数字）。
+  三种范式共用 Lane / RelationEdge / blockedOn 三个底层抽象，只是布局策略不同。
+</div>
+
+<script>
+// tabs
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === t));
+  ['debate','dispatch','swarm'].forEach(k =>
+    document.getElementById('p-' + k).classList.toggle('hidden', k !== t.dataset.tab));
+  window.scrollTo({top:0, behavior:'smooth'});
+}));
+
+// theme
+document.getElementById('theme').addEventListener('click', () => {
+  const el = document.documentElement;
+  el.dataset.theme = el.dataset.theme === 'light' ? 'dark' : 'light';
+});
+
+// disclosures
+document.querySelectorAll('.disc > .disc-h').forEach(h => h.addEventListener('click', () => {
+  const d = h.parentElement;
+  d.dataset.open = d.dataset.open === '1' ? '0' : '1';
+}));
+
+// lane layout strategy toggle (lanes ⇄ merged)
+document.querySelectorAll('#viewtog button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#viewtog button').forEach(x => x.classList.toggle('on', x === b));
+  const par = document.getElementById('par');
+  par.classList.toggle('lanes', b.dataset.view === 'lanes');
+  par.classList.toggle('merged', b.dataset.view === 'merged');
+}));
+
+// rebuttal edge → jump + flash the referenced message
+document.querySelectorAll('.rebut[data-to]').forEach(r => r.addEventListener('click', () => {
+  const el = document.getElementById(r.dataset.to);
+  if (!el) return;
+  el.scrollIntoView({block:'center', behavior:'smooth'});
+  el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+  setTimeout(() => el.classList.remove('flash'), 1200);
+}));
+
+// comment button → inline compose in that message's rail
+document.querySelectorAll('.acts button.accent').forEach(b => b.addEventListener('click', () => {
+  const msg = b.closest('.msg'); if (!msg) return;
+  const rail = msg.querySelector('.rail'); if (!rail) return;
+  if (rail.querySelector('.filling')) return;
+  const d = document.createElement('div');
+  d.className = 'cc filling';
+  d.innerHTML = '<div class="fill">写下评论… <span class="faint">（Enter 提交）</span></div>';
+  rail.appendChild(d);
+}));
+</script>
+</body>
+</html>
