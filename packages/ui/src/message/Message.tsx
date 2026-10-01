@@ -1,6 +1,13 @@
 'use client'
 
-import type { ChatMessage, MessagePart, QuotedMessage, Reaction } from '@xinjiyuan97/chat-core'
+import type {
+  ChatMessage,
+  A2UIActionRequest,
+  MessagePart,
+  PermissionResolution,
+  QuotedMessage,
+  Reaction,
+} from '@xinjiyuan97/chat-core'
 import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
@@ -14,6 +21,11 @@ export type MessageProps = {
   onRegenerate?: () => void
   onEdit?: () => void
   onRetry?: () => void
+  onPermissionDecision?: (
+    resolution: PermissionResolution,
+    message: ChatMessage,
+  ) => void | Promise<void>
+  onA2UIAction?: (action: A2UIActionRequest, message: ChatMessage) => void | Promise<void>
   onFeedback?: (value: 'like' | 'dislike', message: ChatMessage) => void
   onReactionChange?: (reactions: Reaction[], message: ChatMessage) => void
   /** Enables the quote button. See `MessageActions`. */
@@ -43,6 +55,8 @@ export function Message(props: MessageProps) {
     onRegenerate,
     onEdit,
     onRetry,
+    onPermissionDecision,
+    onA2UIAction,
     onFeedback,
     onReactionChange,
     onQuote,
@@ -63,7 +77,12 @@ export function Message(props: MessageProps) {
   if (isSystem) {
     return (
       <div className={cn('my-3 text-center text-cc-xs text-cc-faint', className)}>
-        <MessageContent message={message} renderPart={renderPart} />
+        <MessageContent
+          message={message}
+          renderPart={renderPart}
+          onPermissionDecision={onPermissionDecision}
+          onA2UIAction={onA2UIAction}
+        />
       </div>
     )
   }
@@ -102,7 +121,13 @@ export function Message(props: MessageProps) {
             ],
           )}
         >
-          <MessageContent message={message} onRetry={onRetry} renderPart={renderPart} />
+          <MessageContent
+            message={message}
+            onRetry={onRetry}
+            renderPart={renderPart}
+            onPermissionDecision={onPermissionDecision}
+            onA2UIAction={onA2UIAction}
+          />
         </div>
 
         <div className={cn('flex items-center gap-2', isUser && 'flex-row-reverse')}>

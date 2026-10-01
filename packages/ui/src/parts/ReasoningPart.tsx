@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { cn } from '../lib/cn'
 import { formatDuration } from '../lib/format'
-import { ThinkingIcon } from '../icons'
+import { StopIcon, ThinkingIcon } from '../icons'
 import { Collapsible } from '../primitives/Collapsible'
 import { useLocale } from '../provider/ChatThemeProvider'
 import { LoadingShimmer, TypingText } from '../typing/TypingText'
@@ -37,6 +37,7 @@ export function ReasoningPart({
   defaultOpen,
   className,
 }: ReasoningPartProps) {
+  streaming = streaming && !part.cancelled
   const locale = useLocale()
   const [open, setOpen] = useState(defaultOpen ?? streaming)
   const touched = useRef(defaultOpen !== undefined)
@@ -55,8 +56,14 @@ export function ReasoningPart({
 
   const header = (
     <span className="flex min-w-0 items-center gap-1.5">
-      <ThinkingIcon size={13} className="shrink-0 text-cc-faint" />
-      {streaming ? (
+      {part.cancelled ? (
+        <StopIcon size={13} className="shrink-0 text-cc-faint" />
+      ) : (
+        <ThinkingIcon size={13} className="shrink-0 text-cc-faint" />
+      )}
+      {part.cancelled ? (
+        <span className="truncate">{locale.cancelled}</span>
+      ) : streaming ? (
         <LoadingShimmer className="font-medium">{locale.thinking}</LoadingShimmer>
       ) : (
         <span className="truncate">
@@ -74,7 +81,7 @@ export function ReasoningPart({
    * expander that rewards a click with blank space is a small betrayal. */
   if (!part.text) {
     // Nothing happened worth reporting at all: no text, no timing, not flagged, not live.
-    if (!streaming && !part.redacted && formatted === '') return null
+    if (!part.cancelled && !streaming && !part.redacted && formatted === '') return null
 
     return (
       <div
@@ -86,7 +93,7 @@ export function ReasoningPart({
         )}
         data-cc-reasoning="empty"
       >
-        {streaming ? (
+        {streaming || part.cancelled ? (
           header
         ) : (
           <span className="flex min-w-0 items-center gap-1.5">

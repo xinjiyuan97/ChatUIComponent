@@ -5,12 +5,15 @@ export type ChatLocale = {
   code: string
 
   thinking: string
+  cancelled: string
   thoughtFor: (duration: string) => string
   reasoning: string
   /** The model thought but returned no text, and not even a duration to report. */
   reasoningHidden: string
 
   toolRunning: string
+  /** Status shown while a client-owned tool waits for the host. */
+  toolWaiting?: string
   toolSucceeded: string
   toolFailed: string
   toolArguments: string
@@ -225,11 +228,13 @@ export const zhCN: ChatLocale = {
   code: 'zh-CN',
 
   thinking: '思考中',
+  cancelled: '已取消',
   thoughtFor: (duration) => `思考 ${duration}`,
   reasoning: '思考过程',
   reasoningHidden: '已思考',
 
   toolRunning: '执行中',
+  toolWaiting: '等待宿主执行',
   toolSucceeded: '完成',
   toolFailed: '失败',
   toolArguments: '参数',
@@ -419,11 +424,13 @@ export const enUS: ChatLocale = {
   code: 'en-US',
 
   thinking: 'Thinking',
+  cancelled: 'Cancelled',
   thoughtFor: (duration) => `Thought for ${duration}`,
   reasoning: 'Reasoning',
   reasoningHidden: 'Thought about it',
 
   toolRunning: 'Running',
+  toolWaiting: 'Waiting for host',
   toolSucceeded: 'Done',
   toolFailed: 'Failed',
   toolArguments: 'Arguments',

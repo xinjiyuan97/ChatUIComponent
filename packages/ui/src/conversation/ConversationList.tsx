@@ -27,7 +27,7 @@ import { ConversationItem, SUBTITLE_ROW_HEIGHT, type ActiveIndicator } from './C
 export type ConversationListProps = {
   conversations: Conversation[]
   activeId?: string
-  /** `none` drops the accent bar on the active row, leaving only its tinted fill. */
+  /** Defaults to no accent bar; pass `bar` to explicitly show it on the active row. */
   activeIndicator?: ActiveIndicator
   /** Search term: filters the list and highlights matches. */
   query?: string

@@ -6,7 +6,8 @@
   "scripts": {
     "storybook": "storybook dev -p 6006 --no-open",
     "build": "storybook build -o storybook-static",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check:storybook-runs": "sh -c 'set -eu; port=4173; (cd storybook-static && python3 -m http.server \"$port\" --bind 127.0.0.1 >/tmp/agent-chat-storybook-$port.log 2>&1) & pid=$!; trap \"kill $pid 2>/dev/null || true\" EXIT INT TERM; sleep 1; code=$(curl -fsS -o /dev/null -w \"%{http_code}\" \"http://127.0.0.1:$port/iframe.html?id=chat-message--user&viewMode=story\"); test \"$code\" = 200'"
   },
   "dependencies": {
     "@xinjiyuan97/chat-a2ui": "workspace:*",

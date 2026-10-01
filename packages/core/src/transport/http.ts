@@ -24,11 +24,26 @@ export async function* fetchSSE(
   options: HttpTransportOptions,
   request: SendRequest,
   context: TransportContext,
+  includeEnvelope = false,
 ): AsyncGenerator<SSEMessage> {
   const doFetch = options.fetch ?? globalThis.fetch
-  const payload = options.prepareBody
+  const legacyPayload = options.prepareBody
     ? options.prepareBody(request)
     : { messages: request.messages, ...resolve(options.body), ...request.body }
+  const payload = includeEnvelope
+    ? {
+        ...(legacyPayload as object),
+        ...stripUndefined({
+          protocol: request.protocol,
+          conversationId: request.conversationId,
+          turnId: request.turnId,
+          runId: request.runId,
+          capabilities: request.capabilities,
+          resume: request.resume,
+          input: request.input,
+        }),
+      }
+    : legacyPayload
 
   const response = await doFetch(options.url, {
     method: options.method ?? 'POST',
@@ -56,6 +71,10 @@ export async function* fetchSSE(
   }
 
   yield* parseSSEStream(response.body, context.signal)
+}
+
+function stripUndefined<T extends Record<string, unknown>>(value: T): Partial<T> {
+  return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined)) as Partial<T>
 }
 
 function truncate(text: string, max = 300): string {

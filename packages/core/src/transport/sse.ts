@@ -1,10 +1,20 @@
 import type { ChatEvent } from '../events'
+import { markEventBatch } from '../event-batch'
 import type { HttpTransportOptions } from './http'
 import { fetchSSE } from './http'
 import type { SSEMessage } from './sse-parser'
-import type { ChatTransport, SendRequest, TransportContext } from './types'
+import {
+  TransportError,
+  type ChatTransport,
+  type CancelRequest,
+  type SendRequest,
+  type TransportContext,
+} from './types'
+import type { ServerHello } from '../types'
 
 export type SSETransportOptions = HttpTransportOptions & {
+  /** Endpoint for the typed cancel POST. Defaults to the configured SSE URL. */
+  cancelUrl?: string
   /**
    * Converts one SSE message into zero or more `ChatEvent`s. Defaults to parsing the
    * payload as a `ChatEvent` JSON object, i.e. the server already speaks our format.
@@ -23,15 +33,63 @@ export function createSSETransport(options: SSETransportOptions): ChatTransport 
 
   return {
     async *send(request: SendRequest, context: TransportContext) {
-      for await (const message of fetchSSE(options, request, context)) {
+      let sawBusinessEvent = false
+      for await (const message of fetchSSE(options, request, context, true)) {
         if (message.data === '[DONE]') return
         const mapped = mapEvent(message)
         if (!mapped) continue
-        if (Array.isArray(mapped)) yield* mapped
-        else yield mapped
+        if (!Array.isArray(mapped) && mapped.type === 'server-hello') {
+          if (!sawBusinessEvent) context.onServerHello?.(mapped as ServerHello)
+          sawBusinessEvent = true
+          continue
+        }
+        sawBusinessEvent = true
+        const eventId = parseEventId(message.id)
+        if (Array.isArray(mapped)) {
+          const batchId = Symbol('sse-event-batch')
+          yield* mapped.map((event) => markEventBatch({ ...event, eventId }, batchId))
+        } else {
+          yield { ...mapped, eventId }
+        }
+      }
+    },
+    async cancel(request: CancelRequest) {
+      const doFetch = options.fetch ?? globalThis.fetch
+      const response = await doFetch(options.cancelUrl ?? options.url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          ...(typeof options.headers === 'function' ? options.headers() : options.headers),
+        },
+        body: JSON.stringify({
+          protocol: 'agent-chat/1',
+          ...stripUndefined({ turnId: request.turnId, runId: request.runId }),
+          input: [request.input],
+        }),
+        credentials: options.credentials,
+      })
+      if (!response.ok) {
+        const text = await response.text().catch(() => '')
+        throw new TransportError(
+          `Cancellation request failed with status ${response.status}${text ? `: ${text}` : ''}`,
+          { status: response.status, body: text },
+        )
       }
     },
   }
+}
+
+function stripUndefined<T extends Record<string, unknown>>(value: T): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(value).filter(([, entry]) => entry !== undefined),
+  ) as Partial<T>
+}
+
+function parseEventId(id: string | undefined): number | undefined {
+  if (id === undefined || id.trim() === '') return undefined
+  const parsed = Number(id)
+  return Number.isFinite(parsed) ? parsed : undefined
 }
 
 function defaultMapEvent(message: SSEMessage): ChatEvent | null {

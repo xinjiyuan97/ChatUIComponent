@@ -4,10 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useStore } from 'zustand'
 
 import type { ChatEvent } from '../events'
-import type { ChatStore, SendOptions } from '../store'
+import type { ChatStore, ClientToolHandler, SendOptions } from '../store'
 import { createChatStore } from '../store'
 import type { ChatTransport } from '../transport/types'
-import type { ChatMessage, ChatStatus } from '../types'
+import type { A2UIActionRequest, ChatMessage, ChatStatus, PermissionResolution } from '../types'
 
 export type UseChatOptions = {
   transport: ChatTransport
@@ -22,6 +22,7 @@ export type UseChatOptions = {
   onFinish?: (message: ChatMessage) => void
   onError?: (error: Error) => void
   onEvent?: (event: ChatEvent) => void
+  onClientTool?: ClientToolHandler
 }
 
 export type UseChatResult = {
@@ -32,6 +33,8 @@ export type UseChatResult = {
   isLoading: boolean
   send: (text: string, options?: SendOptions) => Promise<void>
   submit: (options?: SendOptions) => Promise<void>
+  submitPermissionDecision: (resolution: PermissionResolution) => Promise<void>
+  submitA2UIAction: (messageId: string, action: A2UIActionRequest) => Promise<void>
   stop: () => void
   regenerate: () => Promise<void>
   editAndResend: (messageId: string, text: string) => Promise<void>
@@ -60,6 +63,7 @@ export function useChat(options: UseChatOptions): UseChatResult {
       onFinish: (message) => latest.current.onFinish?.(message),
       onError: (error) => latest.current.onError?.(error),
       onEvent: (event) => latest.current.onEvent?.(event),
+      onClientTool: (event, submitResult) => latest.current.onClientTool?.(event, submitResult),
     }),
   )
 
@@ -101,6 +105,16 @@ export function useChat(options: UseChatOptions): UseChatResult {
     (sendOptions?: SendOptions) => store.getState().submit(sendOptions),
     [store],
   )
+  const submitPermissionDecision = useCallback(
+    (resolution: PermissionResolution) =>
+      store.getState().submitPermissionDecision(resolution),
+    [store],
+  )
+  const submitA2UIAction = useCallback(
+    (messageId: string, action: A2UIActionRequest) =>
+      store.getState().submitA2UIAction(messageId, action),
+    [store],
+  )
   const stop = useCallback(() => store.getState().stop(), [store])
   const regenerate = useCallback(() => store.getState().regenerate(), [store])
   const editAndResend = useCallback(
@@ -138,6 +152,8 @@ export function useChat(options: UseChatOptions): UseChatResult {
       isLoading: status === 'submitted' || status === 'streaming',
       send,
       submit,
+      submitPermissionDecision,
+      submitA2UIAction,
       stop,
       regenerate,
       editAndResend,
@@ -155,6 +171,8 @@ export function useChat(options: UseChatOptions): UseChatResult {
       error,
       send,
       submit,
+      submitPermissionDecision,
+      submitA2UIAction,
       stop,
       regenerate,
       editAndResend,
