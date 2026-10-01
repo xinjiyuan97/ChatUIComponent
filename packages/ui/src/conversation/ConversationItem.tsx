@@ -181,7 +181,7 @@ export function ConversationItem(props: ConversationItemProps) {
             <CloseIcon size={13} />
           </RowButton>
         </span>
-      ) : (
+      ) : onRename || onDelete || onTogglePin ? (
         <span
           className={cn(
             'relative flex shrink-0 items-center opacity-0 transition-opacity duration-150 ease-cc',
@@ -210,7 +210,7 @@ export function ConversationItem(props: ConversationItemProps) {
             />
           )}
         </span>
-      )}
+      ) : null}
     </div>
   )
 }
@@ -261,6 +261,8 @@ export function ConversationItemMenu({
     run: () => void
     danger: boolean
   }>
+
+  if (items.length === 0) return null
 
   return (
     <>

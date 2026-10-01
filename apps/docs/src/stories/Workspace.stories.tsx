@@ -93,6 +93,7 @@ const TRANSCRIPT: ChatMessage[] = [
 ]
 
 function Workspace() {
+  const [conversations, setConversations] = useState(() => CONVERSATIONS.slice(0, 8))
   const [activeId, setActiveId] = useState(CONVERSATIONS[0]?.id)
   const panel = useSidePanel()
 
@@ -143,10 +144,26 @@ function Workspace() {
       <ChatWorkspace
         sidebar={
           <ConversationSidebar
-            conversations={CONVERSATIONS.slice(0, 8)}
+            conversations={conversations}
             activeId={activeId}
             onSelect={setActiveId}
             onNewChat={() => setActiveId(undefined)}
+            onRename={(id, title) =>
+              setConversations((list) =>
+                list.map((entry) => (entry.id === id ? { ...entry, title } : entry)),
+              )
+            }
+            onTogglePin={(id) =>
+              setConversations((list) =>
+                list.map((entry) =>
+                  entry.id === id ? { ...entry, pinned: !entry.pinned } : entry,
+                ),
+              )
+            }
+            onDelete={(id) => {
+              setConversations((list) => list.filter((entry) => entry.id !== id))
+              setActiveId((current) => (current === id ? undefined : current))
+            }}
             now={NOW}
           />
         }

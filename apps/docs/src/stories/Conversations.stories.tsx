@@ -1,4 +1,4 @@
-import { useMemo, useState, type ComponentProps } from 'react'
+import { useState, type ComponentProps } from 'react'
 import type { Meta, StoryObj } from '@storybook/react'
 
 import type { Conversation } from '@xinjiyuan97/chat-core'
@@ -217,7 +217,7 @@ export const ListOnly: Story = {
   render: () => {
     const Demo = () => {
       const [query, setQuery] = useState('token')
-      const conversations = useMemo(() => CONVERSATIONS, [])
+      const [conversations, setConversations] = useState(() => [...CONVERSATIONS])
 
       return (
         <div className="flex h-[600px] w-72 flex-col gap-2 border-r border-cc-border p-2">
@@ -233,6 +233,19 @@ export const ListOnly: Story = {
             activeId="c0"
             now={NOW}
             onSelect={() => {}}
+            onRename={(id, title) =>
+              setConversations((list) =>
+                list.map((entry) => (entry.id === id ? { ...entry, title } : entry)),
+              )
+            }
+            onTogglePin={(id) =>
+              setConversations((list) =>
+                list.map((entry) =>
+                  entry.id === id ? { ...entry, pinned: !entry.pinned } : entry,
+                ),
+              )
+            }
+            onDelete={(id) => setConversations((list) => list.filter((entry) => entry.id !== id))}
           />
         </div>
       )
