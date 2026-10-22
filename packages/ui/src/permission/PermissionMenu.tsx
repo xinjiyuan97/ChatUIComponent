@@ -111,6 +111,23 @@ export function PermissionMenu(props: PermissionMenuProps) {
           )}
         </div>
 
+        {request.blockedOn && (
+          <div
+            className="mt-2 rounded-cc-sm border border-cc-warning/35 bg-cc-warning-subtle/30 px-2.5 py-2 text-cc-xs text-cc-muted"
+            data-cc-blocked-on
+          >
+            {request.blockedOn.agentId && (
+              <p>{locale.permissionBlockedAgent(request.blockedOn.agentId)}</p>
+            )}
+            {request.blockedOn.taskId && (
+              <p>{locale.permissionBlockedTask(request.blockedOn.taskId)}</p>
+            )}
+            {request.blockedOn.reason && (
+              <p>{locale.permissionBlockedReason(request.blockedOn.reason)}</p>
+            )}
+          </div>
+        )}
+
         {request.detail && (
           /* Verbatim and selectable. The user is approving *this string*, so it must be
              copyable and must never be reflowed or prettified. */

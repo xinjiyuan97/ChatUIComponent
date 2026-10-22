@@ -253,6 +253,7 @@ export type PermissionRequest = {
   options?: PermissionOption[]
   createdAt?: number
   metadata?: Record<string, unknown>
+  blockedOn?: { agentId?: string; taskId?: string; reason?: string }
 }
 
 export type PermissionResolution = {
@@ -288,17 +289,24 @@ export const DEFAULT_PERMISSION_OPTIONS: PermissionOption[] = [
 
 /* ------------------------------------------------------------------ todo */
 
-export type TodoStatus = 'pending' | 'in-progress' | 'completed' | 'cancelled'
+export type TodoStatus =
+  'pending' | 'in-progress' | 'completed' | 'cancelled' | 'blocked' | 'failed'
 
 export type TodoItem = {
   id: string
   title: string
   status: TodoStatus
+  description?: string
+  labels?: string[]
   /** Present-tense form shown while the item runs, e.g. 「正在重构 auth.ts」. */
   activeTitle?: string
   /** One dim line under the title. */
   note?: string
   metadata?: Record<string, unknown>
+  owner?: { agentId: string; name?: string; model?: string }
+  deps?: string[]
+  attempt?: number
+  artifacts?: Array<{ id: string; label: string; kind?: string }>
 }
 
 /**
@@ -315,6 +323,19 @@ export type TodoPart = {
   title?: string
 }
 
+export type HandoffPart = {
+  type: 'handoff'
+  handoffId: string
+  from: { agentId: string; name?: string }
+  to: { agentId: string; name?: string }
+  reason?: string
+  rule?: string
+  carried?: Array<{ label: string; detail?: string }>
+  missing?: Array<{ id: string; label: string; detail?: string }>
+  acknowledged?: boolean
+  at?: number
+}
+
 /** Escape hatch: anything the host wants to render itself. */
 export type CustomPart = {
   type: 'custom'
@@ -329,6 +350,7 @@ export type MessagePart =
   | A2UIPart
   | PermissionPart
   | TodoPart
+  | HandoffPart
   | FilePart
   | SourcePart
   | ErrorPart
@@ -350,6 +372,7 @@ export type ChatMessage = {
   status?: MessageStatus
   reactions?: Reaction[]
   metadata?: Record<string, unknown>
+  agentId?: string
 }
 
 /**

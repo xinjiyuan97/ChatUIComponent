@@ -15,6 +15,44 @@ function replay(events: ChatEvent[], now = NOW): ChatMessage {
 }
 
 describe('applyEvent', () => {
+  it('only adds message ownership when the event carries an agent id', () => {
+    expect(replay([{ type: 'text-delta', delta: 'legacy' }])).not.toHaveProperty('agentId')
+    expect(replay([{ type: 'text-delta', delta: 'owned', agentId: 'builder' }])).toMatchObject({
+      agentId: 'builder',
+    })
+  })
+
+  it('keeps agent ownership isolated when events switch agents', () => {
+    const message = replay([
+      { type: 'text-delta', delta: 'one', agentId: 'planner' },
+      { type: 'text-start', agentId: 'builder' },
+      { type: 'text-delta', delta: 'two', agentId: 'builder' },
+    ])
+    expect(message.agentId).toBe('builder')
+    expect(message.parts).toHaveLength(2)
+  })
+
+  it('replaces a handoff part with the same handoff id in place', () => {
+    const message = replay([
+      {
+        type: 'handoff',
+        handoffId: 'h1',
+        from: { agentId: 'a' },
+        to: { agentId: 'b' },
+        reason: 'first',
+      },
+      {
+        type: 'handoff',
+        handoffId: 'h1',
+        from: { agentId: 'a' },
+        to: { agentId: 'b' },
+        reason: 'updated',
+      },
+    ])
+    expect(message.parts).toEqual([
+      expect.objectContaining({ type: 'handoff', handoffId: 'h1', reason: 'updated' }),
+    ])
+  })
   it('waits for the host when a client tool becomes available', () => {
     const message = replay([
       { type: 'tool-input-start', toolCallId: 'client-1', name: 'read-file', execution: 'client' },

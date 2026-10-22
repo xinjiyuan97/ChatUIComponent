@@ -27,6 +27,7 @@ jobs:
       - run: pnpm lint
       - run: pnpm prettier --check "**/*.{ts,tsx,css,md,json}"
       - run: pnpm test
+      - run: pnpm test:stories
 
       # Everything below consumes `dist`, so the library build has to come first.
       - run: pnpm build

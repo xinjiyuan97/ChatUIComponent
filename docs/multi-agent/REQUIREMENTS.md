@@ -95,6 +95,8 @@ export type HandoffPart = {
 3. 汇总头：完成 / 进行中 / 阻塞 / 失败的计数，数字用 **tabular** 对齐。
 4. **派发动作条只在给了对应回调时渲染对应按钮**（见第 1 节第 7 条原则）。
 5. 任务卡上的「阻塞」态要能一眼区分于「进行中」。
+6. `TaskCard` 的状态标识、卡头、owner 行、依赖条、产物列表、动作条与子流插槽均拆成独立导出子组件；拆分不得改变既有 DOM、类名与 `data-cc-task*` 属性。
+7. `TaskTrajectory` —— 单条任务按时间顺序的处理史。props 为 `item: TodoItem`、`steps: TaskTrajectoryStep[]`、可选 `agents?: Agent[]`、`currentStepId?` 与交互回调；渲染 `<ol>/<li>` 竖向时间线，当前步骤带 `aria-current="step"`，阻塞/失败使用 `cc-` 语义色，时间使用 tabular 数字，并复用 `AgentBadge` / `AgentAvatar`。没有对应回调时不渲染详情或重试控件。
 
 ### G. ui —— 求助 / 闸门
 
@@ -116,6 +118,8 @@ export type HandoffPart = {
 2. **任务板**：按状态分组 + 切换到按 owner；含一条阻塞任务（带 `blockedOn` 的审批卡）与一条带依赖/产物的任务。
 3. **交接**：轨迹两个节点（含理由与当前持有者）+ 上下文卡（已携带 3 项 / 未携带 2 项，**可勾选确认**）。
 4. **求助卡**：agent 卡在任务上请求人类决定（复用 `PermissionPart`）。
+5. **任务轨迹**：至少 5 步，包含一次交接、工具高风险审批阻塞、一次重试与完成，且当前步骤高亮。
+6. **拆分后的任务卡**：单独渲染一张卡，并在 story 中组合至少一个独立导出的 TaskCard 子组件。
 
 要求：
 
@@ -126,6 +130,7 @@ export type HandoffPart = {
 
 - **core**：① 无 `agentId` 时消息不带该字段；② 有 `agentId` 时正确落位；③ 同一 turn 内两个不同 `agentId` 互不污染；④ `resolveAgent` 对未知/缺失 id 返回中性结果且不抛；⑤ `handoff` part 同 `handoffId` 原地替换。
 - **ui**：① 有 `agentId` → 徽章出现且 agent 名与模型名各自正确；② **无 `agentId` → 查询不到徽章**；③ 没给派发回调 → 查不到派发按钮；④ 未携带项未全部确认时确认不可用；⑤ `HandoffTrail` 高亮当前持有者。
+- **ui 增补**：① `TaskTrajectory` 当前步骤带 `aria-current="step"`；② steps 顺序与输入一致；③ 没有详情/重试回调时查不到对应交互按钮；④ `TaskCard` 拆分出的子组件可以独立渲染。
 - 测试位置：core 放 `packages/core/src/**`、ui 放 `packages/ui/src/**`（`vitest` 的 `include` 已覆盖 `packages/*/src/**/*.test.{ts,tsx}`）。
 
 ## 4. 严格不做
@@ -162,3 +167,68 @@ pnpm build:storybook
 4. Storybook：新增 story 的 id 列表 + **你无法自行验证的部分**（明说你没法在浏览器里看，需要上级实测 —— 尤其是「首屏真的渲染出内容」这件事）；
 5. 第 5 节每条命令的真实输出；
 6. 明确说「本阶段完成」。
+
+---
+
+# 7. 设计修订（Phase A2 —— 按评审意见追加）
+
+> 来源：三条评审意见（头像要拆成基础件再组合 / 任务板要多列 / 每个任务要有简介等信息）。
+> **本节推翻或细化了第 2 节的对应部分，冲突时以本节为准。**
+
+## 7.1 `AgentAvatar` 拆成基础件，再组合
+
+**现状问题**：`AgentAvatar` 把「头像」和「状态点」焊死在一个组件里 —— `status` prop 驱动一个内联的绝对定位点。结果：单用头像做不到、单用状态点做不到、想换一个别的标记（不一定是状态点）也做不到。
+
+**要求：**
+
+1. **`AgentAvatar` 收成基础组件**：只画头像。props 收敛为 `agent?` / `name?` / `src?` / `size?` / `className?` —— **不含任何状态逻辑**。
+2. **`AgentStatusDot` 抽成独立基础组件**：props `status` / `size?` / `label?` / `className?`；颜色走 `cc-` token；`thinking`/`speaking` 的动效尊重 `prefers-reduced-motion`；无障碍标签走 locale（**不要写死英文**）。
+3. **`AgentPresence` = 组合件**：`AgentAvatar` + 定位好的 `AgentStatusDot`。`Message` 的作者行与 `TaskCard` 改用它。
+4. **可组合的关键**：`AgentAvatar` 要接 `overlay?: ReactNode` —— 宿主能把自己的标记叠上去（不一定是状态点），而不是只能在「有状态点」和「没状态点」之间二选一。
+5. **`Message.tsx` 的既有视觉必须不变** —— 拆组件不等于改样子。
+6. 三个组件都桶式导出到 `packages/ui/src/index.ts`。
+7. **story**：新增 `Agent pieces: composed` —— 同一屏并列：基础头像单独用 / 加状态点组合用 / 六种 status 各一 / 不带 status。play 要断言「基础件自己不含状态点」「组合件含」。
+
+## 7.2 `TaskBoard` 支持多列（看板）
+
+1. `TaskBoard` 新增 `layout?: 'columns' | 'stack'`，**默认 `'columns'`**（看板是这个组件的自然形态）；`'stack'` 保持现在的竖向分组列表。
+2. **列**：`groupBy='status'` 时一列一个状态（列头 = 状态名 + 计数）；`groupBy='owner'` 时一列一个 agent。列头数字用 **tabular**。
+3. **窄容器必须处理好**：列宽固定 + 整体横向滚动（`overflow-x` + snap），或窄到一定程度退化成 stack —— 自己选一种，但**不许出现内容被压扁或溢出裁切**。
+4. **空列要保留**（列头可见、计数 0），否则列位置会跳 —— 除非该状态在当前数据里压根没出现过。
+5. 既有的分组切换（Status / Owner）在多列下同样要工作。
+6. **story**：新增 `Task board: columns`（一列一状态、含空列）；原 `task-board-states` 显式改为 `layout='stack'`，**两条都留着**。
+
+## 7.3 任务要能表达「简介」等信息
+
+**现状问题**：`TodoItem` 只有 `title` + 一行 `note`，卡片信息量太薄。
+
+1. `TodoItem` 新增（都可选、向后兼容）：
+   - `description?: string` —— 简介，卡片正文；**默认折叠到 2–3 行**，可展开。
+   - `labels?: string[]` —— 小标签（如 `risk` / `needs-review` / `blocked`）。
+2. **状态要显式**：`TodoStatus` 追加 `'blocked'` 与 `'failed'`（增量）。注意现在 `TaskCard` 是用 `status === 'pending' && owner !== undefined` **推断**「阻塞」、用 `cancelled` 当「失败」—— 这是隐式重载，卡片上说不清到底卡在哪。改成：**显式状态优先**；为不破坏既有 story/测试，`pending + owner` 的旧推断**只保留为兼容回退**，并在注释里写明它是什么、为什么留着。
+3. **卡片的呈现顺序**（从上到下）：标题 → 标签 → **简介** → owner（`AgentPresence`）→ 状态 / 尝试次数 → 依赖 → 产物。同类信息成组，不要散着放。
+4. locale 补新增键（**中英都要**）：展开/收起简介、标签区、显式的阻塞/失败状态名。
+5. **story fixture 必须真的带上 `description` 与 `labels`** —— 否则等于没做。至少两条任务写**有实质内容的简介**（不要 `TODO` / `lorem` 之类占位）。
+6. play 断言要咬行为：例如「默认只显示 2–3 行、展开后能看到完整简介」「阻塞态走的是显式 status 而不是推断」。
+
+## 7.4 本节验收
+
+沿用第 5 节全部命令，另加一条不许破的红线：
+
+- **既有 story 与测试一条都不许变红**；
+- **`Message.tsx` 的既有视觉不得变化**（拆 `AgentAvatar` 时最容易碰坏的就是这里 —— 用断言或逐字节对比证明）。
+
+## 7.5 断言卫生：这类错误绝不能再溜过去
+
+**背景**：同一类缺陷已经发生**三次** —— `task-board-states` 的 `getByText('Builder')`（多处匹配）、`handoff` 的 `getByText('Plan is ready')`（文本被拆散）、`agent-pieces-composed` 的 `getByText('speaking')` 与 `task-board-columns` 的 `getByTestId('cc-agent-badge')`（多张卡各有一个徽章）。**四次都不是组件错，都是断言没有作用域。**
+
+根本原因：**story 的 `play` 断言根本不在 `pnpm test` 的覆盖范围内**（vitest 的 `include` 只到 `packages/*/src` 与 `examples/*/src`），所以它们只有**人肉打开 Storybook** 才被检查 —— 全部自动化验收绿灯，story 却是坏的。
+
+要求：
+
+1. **断言必须有作用域或数量**。禁止无作用域的 `getByText(...)` / `getByTestId(...)` 去查一个「页面上本来就可能有多个」的东西。做法：`within(某个稳定标记元素)` 限定范围，或 `getAllBy*` + 断言**精确数量**。禁止用 `length >= 1` 这种把意义弄丢的弱化写法。
+2. **必须让 play 断言进 CI**：把 `apps/docs` 里那个现成的孤儿装置（`vitest.protocol.config.ts` + `Protocol.play.test.tsx`，它把 story 的 `play` 函数在 jsdom 里真跑一遍）**推广到 `apps/docs/src/stories/` 下的全部 story**，接成一条 `pnpm test:stories`，并加进 `.github/workflows/ci.yml`。
+   - 要求：跑到**全部** story（含 `Protocol/` 与 `Multi-Agent/`），任一 story 的 play 失败或抛错 → 该命令非零退出。
+   - 注意它需要在 jsdom 里提供 story 需要的 provider/decorator；若某类 story 在 jsdom 下确实无法运行（例如依赖 canvas 尺寸），**允许显式排除并在文件里写清为什么**，但不许整仓跳过。
+3. 第 5 节的验收命令里**追加 `pnpm test:stories`**。
+4. 报告里给出该命令的真实输出：**跑了多少条 story、几条跳过、为什么跳过**。

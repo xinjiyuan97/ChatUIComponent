@@ -233,6 +233,28 @@ v1 定义 `blockId`，但当前 UI v1 能力可以声明 `blockIds: false`。在
 必须保证同类 text block 或 reasoning block 不交错；text/reasoning 的顺序仍然必须
 保持。声明 `blockIds: true` 后才允许并发 block 交错。
 
+**★ `blockId` 的语义：一个 block 一个 id，跨 block 绝不复用。**
+客户端按 `blockId` 认块 —— 收到 `text-start` 时若该 `blockId` 已有对应 part，则**不新建块**，
+后续 `text-delta` 全部并入那个已存在的块。因此：
+
+- **同一连续块内**：`text-start` / 多个 `text-delta` / `text-end` 沿用**同一个** id（如 `text:0`）；
+- **被工具或另一渠道打断、同类输出重新开始时**：必须**分配新 id**（`text:1`、`text:2`…）。
+
+**踩过的坑（2026-10-02，真实现场）**：适配器给每一轮文本都发常量 `blockId: "text"`。
+后果是第 2/3/4 轮的文本全部并进第 1 块、工具 part 留在后面 —— 屏幕上表现为
+「**文本全在前、工具全在后**」。而同一批帧按**帧边界**落库（不走 blockId）时又是对的，
+于是症状恰好是「**流式时顺序不对、刷新后就对了**」。
+
+⇒ 服务端**二选一，且必须与能力声明一致**：
+
+1. 按上面规则给**唯一** id（并把 `blockIds` 声明为 `true`）；或
+2. **干脆不发 `blockId`**（客户端退化为「只与末尾同类块合并」，顺序天然正确，此时才可声明 `blockIds: false`）。
+
+**不得声明 `blockIds: false` 却又实际发送 `blockId`** —— 客户端会照收到的字段认块。
+
+**回归不变式（建议写进测试）**：用客户端 reducer 复放你自己的帧序列，断言得到的 parts
+顺序与「服务端期望的 parts」**一致**（`text|tool|text|tool|text`，而不是 `text|tool|tool|tool`）。
+
 reasoning 的 `signature` 是服务端 provider adapter 的不透明数据。UI 只展示或保留，
 不得重新序列化、修改或伪造空字符串 thinking。Anthropic 等 provider 要求回传的
 签名由服务端 adapter 负责保存和回传。
@@ -302,18 +324,26 @@ A2UI action 是否需要回 agent 由 surface 声明决定；`resolveA2UISurface
 
 ## 9. 错误、取消与终局
 
-结构化 error：
+`error` 事件的**线上形状**（以客户端库 `packages/core/src/events.ts` 的类型定义为权威）：
 
 ```ts
-type AgentChatError = {
-  scope: 'turn' | 'message' | 'block' | 'tool'
-  code: string
-  message: string
-  retryable: boolean
+{ type: 'error'
+  error: string                                  // ★ 必须是字符串：渲染层直接把它当文本
+  scope?: 'transport' | 'server' | 'tool' | 'client'
+  code?: string
+  retryable?: boolean
   retryAfterMs?: number
-  details?: unknown
 }
 ```
+
+> **踩过的坑（2026-10-02，真实现场）**：`error` 曾被发成**嵌套对象** `{scope, code, message, retryable}`，
+> 客户端 reducer 把该对象原样当作 error part 的 `message` 交给 React ⇒
+> `Objects are not valid as a React child (found: object with keys {category, code, message, retryable, scope})`
+> ⇒ **整页白屏**。
+>
+> **规矩：服务端所有「客户端会当文本渲染」的字段都必须是字符串**（`error`、`tool-error.error`、
+> text/reasoning 的 `delta` …）；结构化细节放**同级可选字段**（`scope`/`code`/`retryable`/`retryAfterMs`）。
+> 分级语义（哪类错误属于 turn/message/block/tool）用 `scope`+`code` 表达，不要再套一层对象。
 
 推荐 code 包括 `auth`、`validation`、`rate_limit`、`upstream`、`transport`、
 `resume_expired`、`cancelled` 和 `internal`。

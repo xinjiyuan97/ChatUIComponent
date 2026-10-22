@@ -13,6 +13,8 @@ export function applyEvent(
   event: ChatEvent,
   now: number = Date.now(),
 ): ChatMessage {
+  if (event.agentId !== undefined) message = { ...message, agentId: event.agentId }
+
   switch (event.type) {
     case 'message-start':
       return { ...message, id: event.id ?? message.id, status: 'streaming' }
@@ -231,6 +233,27 @@ export function applyEvent(
       const next = { type: 'todo' as const, todoId, items: event.items, title: event.title }
       // Same in-place replacement as `a2ui`: an agent revises its plan many times per run,
       // and appending each revision would bury the conversation under checklists.
+      return index === -1
+        ? withParts(message, [...message.parts, next])
+        : replacePart(message, index, next)
+    }
+
+    case 'handoff': {
+      const index = message.parts.findIndex(
+        (part) => part.type === 'handoff' && part.handoffId === event.handoffId,
+      )
+      const next = {
+        type: 'handoff' as const,
+        handoffId: event.handoffId,
+        from: event.from,
+        to: event.to,
+        reason: event.reason,
+        rule: event.rule,
+        carried: event.carried,
+        missing: event.missing,
+        acknowledged: event.acknowledged,
+        at: event.at,
+      }
       return index === -1
         ? withParts(message, [...message.parts, next])
         : replacePart(message, index, next)

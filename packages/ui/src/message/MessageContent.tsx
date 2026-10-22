@@ -20,6 +20,7 @@ import { SourcesPart } from '../parts/SourcesPart'
 import { TextPart } from '../parts/TextPart'
 import { TodoPart } from '../parts/TodoPart'
 import { ToolCallPart } from '../parts/ToolCallPart'
+import { HandoffPart } from '../agent/Handoff'
 
 export type MessageContentProps = {
   message: ChatMessage
@@ -29,6 +30,7 @@ export type MessageContentProps = {
     message: ChatMessage,
   ) => void | Promise<void>
   onA2UIAction?: (action: A2UIActionRequest, message: ChatMessage) => void | Promise<void>
+  onHandoffAcknowledge?: (message: ChatMessage) => void | Promise<void>
   /**
    * Replaces the built-in renderer for a part. Return `undefined` to fall through to the
    * default — that way a host can special-case one part type without reimplementing the
@@ -50,6 +52,7 @@ export function MessageContent({
   onRetry,
   onPermissionDecision,
   onA2UIAction,
+  onHandoffAcknowledge,
   renderPart,
   className,
 }: MessageContentProps) {
@@ -97,6 +100,16 @@ export function MessageContent({
               )
             case 'todo':
               return <TodoPart key={index} part={part} />
+            case 'handoff':
+              return (
+                <HandoffPart
+                  key={index}
+                  part={part}
+                  onAcknowledge={
+                    onHandoffAcknowledge ? () => onHandoffAcknowledge(message) : undefined
+                  }
+                />
+              )
             case 'file':
               return <FilePart key={index} part={part} />
             case 'error':

@@ -209,5 +209,7 @@ function statusLabel(status: TodoStatus, locale: ChatLocale): string {
   if (status === 'completed') return locale.todoCompleted
   if (status === 'in-progress') return locale.todoInProgress
   if (status === 'cancelled') return locale.todoCancelled
+  if (status === 'blocked') return locale.agentBlocked
+  if (status === 'failed') return locale.agentFailed
   return locale.todoPending
 }

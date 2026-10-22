@@ -21,6 +21,8 @@ export type ChatEventContext = {
   turnId?: string
   runId?: string
   blockId?: string
+  agentId?: string
+  parentRunId?: string
 }
 
 export type ChatEvent =
@@ -67,6 +69,18 @@ export type ChatEvent =
     | { type: 'permission-resolved'; requestId: string; resolution: PermissionResolution }
     /** The agent's plan. Re-emitting the same `todoId` replaces it rather than appending. */
     | { type: 'todo'; todoId?: string; items: TodoItem[]; title?: string }
+    | {
+        type: 'handoff'
+        handoffId: string
+        from: { agentId: string; name?: string }
+        to: { agentId: string; name?: string }
+        reason?: string
+        rule?: string
+        carried?: Array<{ label: string; detail?: string }>
+        missing?: Array<{ id: string; label: string; detail?: string }>
+        acknowledged?: boolean
+        at?: number
+      }
     /**
      * A file, or a placeholder for one still being generated.
      *

@@ -74,7 +74,13 @@ export * from './reactions/ReactionBar'
 export * from './conversation/ConversationSidebar'
 export * from './conversation/ConversationList'
 export * from './conversation/ConversationItem'
-export * from './conversation/AgentGroup'
+export { AGENT_HEADER_HEIGHT, AgentSectionHeader } from './conversation/AgentGroup'
+
+export * from './agent/AgentIdentity'
+export * from './agent/TaskBoard'
+export * from './agent/TaskTrajectory'
+export * from './agent/TaskGraph'
+export * from './agent/Handoff'
 
 /* File preview. The entry points are `filePreviewPanel` / `folderPanel` — one line each to
  * hang the file-type registry off the panel-kind registry. Everything below them is exported

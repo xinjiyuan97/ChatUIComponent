@@ -7,7 +7,9 @@ import type {
   PermissionResolution,
   QuotedMessage,
   Reaction,
+  Agent,
 } from '@xinjiyuan97/chat-core'
+import { resolveAgent } from '@xinjiyuan97/chat-core'
 import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
@@ -15,6 +17,7 @@ import { formatTime } from '../lib/format'
 import { useChatTheme } from '../provider/ChatThemeProvider'
 import { MessageActions } from './MessageActions'
 import { MessageContent } from './MessageContent'
+import { AgentPresence, AgentBadge, type AgentStatus } from '../agent/AgentIdentity'
 
 export type MessageProps = {
   message: ChatMessage
@@ -26,6 +29,7 @@ export type MessageProps = {
     message: ChatMessage,
   ) => void | Promise<void>
   onA2UIAction?: (action: A2UIActionRequest, message: ChatMessage) => void | Promise<void>
+  onHandoffAcknowledge?: (message: ChatMessage) => void | Promise<void>
   onFeedback?: (value: 'like' | 'dislike', message: ChatMessage) => void
   onReactionChange?: (reactions: Reaction[], message: ChatMessage) => void
   /** Enables the quote button. See `MessageActions`. */
@@ -38,6 +42,8 @@ export type MessageProps = {
   /** Suppresses the action row, e.g. while this message is still streaming. */
   hideActions?: boolean
   className?: string
+  agents?: Agent[]
+  agentStatus?: AgentStatus
 }
 
 /**
@@ -57,6 +63,7 @@ export function Message(props: MessageProps) {
     onRetry,
     onPermissionDecision,
     onA2UIAction,
+    onHandoffAcknowledge,
     onFeedback,
     onReactionChange,
     onQuote,
@@ -67,6 +74,8 @@ export function Message(props: MessageProps) {
     showReactions = false,
     hideActions = false,
     className,
+    agents,
+    agentStatus,
   } = props
 
   const { locale, renderUserAvatar, renderAssistantAvatar } = useChatTheme()
@@ -82,6 +91,7 @@ export function Message(props: MessageProps) {
           renderPart={renderPart}
           onPermissionDecision={onPermissionDecision}
           onA2UIAction={onA2UIAction}
+          onHandoffAcknowledge={onHandoffAcknowledge}
         />
       </div>
     )
@@ -89,6 +99,7 @@ export function Message(props: MessageProps) {
 
   const avatar = isUser ? renderUserAvatar?.(message) : renderAssistantAvatar?.(message)
   const showAvatarColumn = showAvatar && avatar !== undefined
+  const resolvedAgent = resolveAgent(message.agentId, agents)
 
   return (
     <div
@@ -110,6 +121,16 @@ export function Message(props: MessageProps) {
       {showAvatarColumn && !isUser && <div className="shrink-0 pt-0.5">{avatar}</div>}
 
       <div className={cn('flex min-w-0 flex-col', isUser ? 'max-w-[80%] items-end' : 'w-full')}>
+        {message.agentId !== undefined && !isUser && (
+          <div className="mb-1 flex items-center gap-1.5" data-cc-message-agent={message.agentId}>
+            <AgentPresence
+              name={resolvedAgent.name ?? message.agentId}
+              src={resolvedAgent.avatar}
+              status={agentStatus}
+            />
+            <AgentBadge name={resolvedAgent.name ?? message.agentId} model={resolvedAgent.model} />
+          </div>
+        )}
         <div
           className={cn(
             'min-w-0',
@@ -127,6 +148,7 @@ export function Message(props: MessageProps) {
             renderPart={renderPart}
             onPermissionDecision={onPermissionDecision}
             onA2UIAction={onA2UIAction}
+            onHandoffAcknowledge={onHandoffAcknowledge}
           />
         </div>
 

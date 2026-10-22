@@ -11,6 +11,7 @@
     "build": "pnpm -r --filter \"./packages/*\" build",
     "dev": "pnpm -r --parallel --filter \"./packages/*\" dev",
     "test": "vitest run",
+    "test:stories": "vitest run --config apps/docs/vitest.protocol.config.ts",
     "test:watch": "vitest",
     "typecheck": "pnpm -r --filter \"./packages/*\" typecheck",
     "lint": "eslint .",

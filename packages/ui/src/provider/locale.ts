@@ -40,6 +40,9 @@ export type ChatLocale = {
   permissionAllowedOnce: string
   permissionAllowedAlways: string
   permissionDenied: string
+  permissionBlockedAgent: (agent: string) => string
+  permissionBlockedTask: (task: string) => string
+  permissionBlockedReason: (reason: string) => string
 
   todos: string
   /** Counter in the todo header, e.g. 「3/7」. */
@@ -52,6 +55,40 @@ export type ChatLocale = {
   todoEmpty: string
   /** Accessible name of a checkable todo row. */
   todoToggle: (title: string) => string
+
+  agentTasks: string
+  agentDone: string
+  agentActive: string
+  agentBlocked: string
+  agentFailed: string
+  agentStatusIdle: string
+  agentStatusThinking: string
+  agentStatusSpeaking: string
+  agentStatusWaiting: string
+  taskDescriptionExpand: string
+  taskDescriptionCollapse: string
+  taskLabels: string
+  taskUnassigned: string
+  taskSummary: string
+  handoffCarried: string
+  handoffMissing: string
+  handoffAcknowledge: string
+  handoffReasonFallback: string
+  agentGroupStatus: string
+  agentGroupOwner: string
+  agentReassign: string
+  agentRetry: string
+  agentCancel: string
+  agentPriority: string
+  taskTrajectory: string
+  taskTrajectoryCurrent: string
+  taskTrajectoryRetry: string
+  taskTrajectoryShowDetail: string
+  taskTrajectoryHideDetail: string
+  taskTrajectoryKind: (kind: string) => string
+  taskTrajectoryStepAt: (at: string) => string
+  taskGraph: string
+  taskGraphDependencyHint: string
 
   copy: string
   copied: string
@@ -256,6 +293,9 @@ export const zhCN: ChatLocale = {
   permissionAllowedOnce: '已允许',
   permissionAllowedAlways: '已允许（本次会话）',
   permissionDenied: '已拒绝',
+  permissionBlockedAgent: (agent) => `${agent} 正在等待你的决定`,
+  permissionBlockedTask: (task) => `卡住的任务：${task}`,
+  permissionBlockedReason: (reason) => `原因：${reason}`,
 
   todos: '任务清单',
   todoProgress: (completed, total) => `${completed}/${total}`,
@@ -266,6 +306,51 @@ export const zhCN: ChatLocale = {
   todoAllDone: '全部完成',
   todoEmpty: '暂无任务',
   todoToggle: (title) => `切换「${title}」的完成状态`,
+
+  agentTasks: '任务',
+  agentDone: '完成',
+  agentActive: '进行中',
+  agentBlocked: '阻塞',
+  agentFailed: '失败',
+  agentStatusIdle: '空闲',
+  agentStatusThinking: '思考中',
+  agentStatusSpeaking: '发言中',
+  agentStatusWaiting: '等待中',
+  taskDescriptionExpand: '展开简介',
+  taskDescriptionCollapse: '收起简介',
+  taskLabels: '任务标签',
+  taskUnassigned: '未分配',
+  taskSummary: '任务概览',
+  handoffCarried: '已携带',
+  handoffMissing: '未携带（需确认）',
+  handoffAcknowledge: '确认并继续',
+  handoffReasonFallback: '交接',
+  agentGroupStatus: '状态',
+  agentGroupOwner: '负责人',
+  agentReassign: '重新派发',
+  agentRetry: '重试',
+  agentCancel: '取消',
+  agentPriority: '优先级',
+  taskTrajectory: '任务轨迹',
+  taskTrajectoryCurrent: '当前步骤',
+  taskTrajectoryRetry: '重试此步骤',
+  taskTrajectoryShowDetail: '展开步骤详情',
+  taskTrajectoryHideDetail: '收起步骤详情',
+  taskTrajectoryKind: (kind) =>
+    ({
+      created: '创建',
+      assigned: '分配',
+      started: '开始',
+      tool: '工具',
+      handoff: '交接',
+      blocked: '阻塞',
+      retry: '重试',
+      completed: '完成',
+      failed: '失败',
+    })[kind] ?? kind,
+  taskTrajectoryStepAt: (at) => `发生于 ${at}`,
+  taskGraph: '任务依赖图',
+  taskGraphDependencyHint: '箭头表示依赖关系',
 
   copy: '复制',
   copied: '已复制',
@@ -452,6 +537,9 @@ export const enUS: ChatLocale = {
   permissionAllowedOnce: 'Allowed',
   permissionAllowedAlways: 'Allowed for this session',
   permissionDenied: 'Denied',
+  permissionBlockedAgent: (agent) => `${agent} is waiting for your decision`,
+  permissionBlockedTask: (task) => `Blocked task: ${task}`,
+  permissionBlockedReason: (reason) => `Reason: ${reason}`,
 
   todos: 'Tasks',
   todoProgress: (completed, total) => `${completed}/${total}`,
@@ -462,6 +550,51 @@ export const enUS: ChatLocale = {
   todoAllDone: 'All done',
   todoEmpty: 'Nothing planned',
   todoToggle: (title) => `Toggle “${title}”`,
+
+  agentTasks: 'Tasks',
+  agentDone: 'Done',
+  agentActive: 'Active',
+  agentBlocked: 'Blocked',
+  agentFailed: 'Failed',
+  agentStatusIdle: 'idle',
+  agentStatusThinking: 'thinking',
+  agentStatusSpeaking: 'speaking',
+  agentStatusWaiting: 'waiting',
+  taskDescriptionExpand: 'Expand description',
+  taskDescriptionCollapse: 'Collapse description',
+  taskLabels: 'Task labels',
+  taskUnassigned: 'Unassigned',
+  taskSummary: 'Task summary',
+  handoffCarried: 'Carried',
+  handoffMissing: 'Missing (needs confirmation)',
+  handoffAcknowledge: 'Acknowledge and continue',
+  handoffReasonFallback: 'handoff',
+  agentGroupStatus: 'Status',
+  agentGroupOwner: 'Owner',
+  agentReassign: 'Reassign',
+  agentRetry: 'Retry',
+  agentCancel: 'Cancel',
+  agentPriority: 'Priority',
+  taskTrajectory: 'Task trajectory',
+  taskTrajectoryCurrent: 'Current step',
+  taskTrajectoryRetry: 'Retry this step',
+  taskTrajectoryShowDetail: 'Show step details',
+  taskTrajectoryHideDetail: 'Hide step details',
+  taskTrajectoryKind: (kind) =>
+    ({
+      created: 'Created',
+      assigned: 'Assigned',
+      started: 'Started',
+      tool: 'Tool',
+      handoff: 'Handoff',
+      blocked: 'Blocked',
+      retry: 'Retry',
+      completed: 'Completed',
+      failed: 'Failed',
+    })[kind] ?? kind,
+  taskTrajectoryStepAt: (at) => `At ${at}`,
+  taskGraph: 'Task dependency graph',
+  taskGraphDependencyHint: 'Arrows show dependencies',
 
   copy: 'Copy',
   copied: 'Copied',
