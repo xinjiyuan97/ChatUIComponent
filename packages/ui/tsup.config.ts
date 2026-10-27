@@ -16,6 +16,8 @@ export default defineConfig({
   external: [
     'react',
     'react-dom',
+    '@xyflow/react',
+    '@dagrejs/dagre',
     'mermaid',
     'pdfjs-dist',
     'docx-preview',

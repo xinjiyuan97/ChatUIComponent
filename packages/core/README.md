@@ -102,3 +102,18 @@ createSSETransport({ url: '/api/chat' }) // ✅ 指向自己的服务端
 ## License
 
 MIT
+
+## 静态 Agent 图文件
+
+`parseAgentGraphYaml(text)` 解析单个 YAML／JSON 文档；`readAgentGraphFile(file)` 读取浏览器文件后解析。
+两者返回 `{ok: true, definition}` 或 `{ok: false, issues}`，支持 Mina 图格式 v1 和 v2。
+错误包含字段路径，以及可用的 YAML 行／列。`validateAgentGraphDefinition(value)` 对未知对象执行
+相同的结构与引用检查。单文件最大 1 MiB；不执行图、不解析宿主资源或算子专属配置 Schema。
+
+```ts
+import { parseAgentGraphYaml } from '@xinjiyuan97/chat-core'
+
+const result = parseAgentGraphYaml(source)
+if (result.ok) console.log(result.definition)
+else console.log(result.issues)
+```
