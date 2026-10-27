@@ -1,5 +1,12 @@
 # @xinjiyuan97/chat-a2ui
 
+## 0.5.0
+
+### Patch Changes
+
+- Updated dependencies [05796ab]
+  - @xinjiyuan97/chat-core@0.5.0
+
 ## 0.4.0
 
 ### Minor Changes
